@@ -81,8 +81,8 @@ export const Loja = () => {
           setAllBarbers(barbersResponse.data);
         }
       } catch (error) {
+        window.location.replace("https://compre.barbeariagendamento.com.br");
         console.error("Erro ao buscar dados iniciais:", error);
-        setMessage("Não foi possível carregar os dados da barbearia.");
       }
     };
 
