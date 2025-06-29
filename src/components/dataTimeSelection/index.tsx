@@ -180,10 +180,9 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
                         isDayHoliday(day)
                           ? `Feriado: ${getHolidayName(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`)}`
                           : undefined
-                      } // ✅ NOVO: Tooltip para feriados
+                      }
                     >
                       {day}
-                      {/* ✅ NOVO: Indicador visual para feriados */}
                       {isDayHoliday(day) && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
                     </button>
                   )}
