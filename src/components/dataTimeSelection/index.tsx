@@ -127,28 +127,28 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
         <h2 className="text-2xl font-semibold text-gray-900">Escolha a Data e Hora</h2>
-        <p className="mt-1 text-sm text-gray-500">Selecione quando você gostaria de nos visitar</p>
+        {/* <p className="mt-1 text-sm text-gray-500">Selecione quando você gostaria de nos visitar</p> */}
       </div>
 
       <div className="lg:flex gap-8 md:min-h-[450px]">
         <div className="space-y-4 lg:w-full">
           <div className="flex items-center justify-between">
-            <label className="flex items-center text-sm md:text-base font-medium text-gray-700">
+            <label className="flex items-center text-base font-medium text-gray-700">
               <Calendar className="mr-2 h-4 w-4" />
               Selecione a Data
             </label>
             <div className="flex items-center space-x-2">
               <button type="button" onClick={handlePrevMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-7 w-7" />
               </button>
-              <span className="text-sm md:text-base font-medium">
+              <span className="text-base font-medium">
                 {monthNames[month]} {year}
               </span>
               <button type="button" onClick={handleNextMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-7 w-7" />
               </button>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
             {loadingTimes ? (
               <Spinner />
             ) : (
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 w-full">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 w-full">
                 {filteredAndVisibleSlots.length > 0
                   ? filteredAndVisibleSlots.map((slot) => (
                       <button
