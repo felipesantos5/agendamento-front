@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Calendar, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
 import { API_BASE_URL } from "@/config/BackendUrl";
@@ -35,6 +35,8 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const [holidayMessage, setHolidayMessage] = useState<string | null>(null);
 
   const { isHoliday, getHolidayName } = useHolidays(currentMonth.getFullYear());
+
+  const timeSlotsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchTimeSlots = async () => {
@@ -113,6 +115,13 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
     }
 
     updateFormData({ date: selectedDate, time: "" });
+
+    setTimeout(() => {
+      timeSlotsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
   };
 
   const isDateInPast = (day: number) => {
@@ -205,7 +214,7 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
           </div>
         </div>
 
-        <div className="space-y-4 mt-4 lg:mt-0 lg:w-full">
+        <div ref={timeSlotsRef} className="space-y-4 mt-4 lg:mt-0 lg:w-full">
           <label className="flex items-center text-sm md:text-base font-medium text-gray-700">
             <Clock className="mr-2 h-4 w-4" />
             Selecione o Horário
