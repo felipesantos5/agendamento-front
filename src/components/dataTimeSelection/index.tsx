@@ -167,23 +167,36 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
                   {day && (
                     <button
                       type="button"
-                      disabled={isDateInPast(day) || isDayHoliday(day)} // ✅ NOVO: Desabilitar feriados
+                      disabled={isDateInPast(day) || isDayHoliday(day)}
                       onClick={() => handleDateSelect(day)}
-                      className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full cursor-pointer text-sm relative ${
-                        isDateInPast(day) || isDayHoliday(day) // ✅ NOVO: Estilo para feriados
-                          ? "!cursor-not-allowed text-gray-300 bg-red-50" // ✅ NOVO: Fundo vermelho claro para feriados
-                          : formData.date === `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-                          ? "bg-[var(--loja-theme-color)] text-white"
-                          : "hover:bg-[var(--loja-theme-color)]/30"
-                      }`}
+                      className={`
+        mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm relative transition-colors
+        ${
+          // 1. Estilo para dias que já passaram: Riscado e cinza
+          isDateInPast(day)
+            ? "text-gray-400 cursor-not-allowed line-through decoration-2"
+            : // 2. Estilo para feriados: Fundo vermelho claro e texto vermelho
+            isDayHoliday(day)
+            ? "bg-red-100 text-red-500 font-semibold cursor-not-allowed"
+            : // 3. Estilo para o dia atualmente selecionado
+            formData.date === `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+            ? "bg-[var(--loja-theme-color)] text-white"
+            : // 4. Estilo padrão para dias disponíveis
+              "hover:bg-[var(--loja-theme-color)]/30 cursor-pointer"
+        }
+    `}
                       title={
-                        isDayHoliday(day)
+                        isDateInPast(day)
+                          ? "Data indisponível"
+                          : isDayHoliday(day)
                           ? `Feriado: ${getHolidayName(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`)}`
                           : undefined
                       }
                     >
                       {day}
-                      {isDayHoliday(day) && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
+
+                      {/* Mantemos o ponto vermelho como um indicador extra apenas para feriados */}
+                      {isDayHoliday(day) && !isDateInPast(day) && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
                     </button>
                   )}
                 </div>
