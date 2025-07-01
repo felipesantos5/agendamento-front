@@ -5,6 +5,11 @@
       "source": "/",
       "destination": "https://compre.barbeariagendamento.com.br",
       "permanent": true
+    },
+    {
+      "source": "/localizacao/:barbershopId",
+      "destination": "https://api.barbeariagendamento.com.br/api/barbershops/:barbershopId/location",
+      "permanent": false
     }
   ]
 }
