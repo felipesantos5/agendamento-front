@@ -8,7 +8,7 @@
     },
     {
       "source": "/localizacao/:barbershopId",
-      "destination": "https://api.barbeariagendamento.com.br/api/barbershops/:barbershopId/location",
+      "destination": "https://api.barbeariagendamento.com.br/barbershops/:barbershopId/location",
       "permanent": false
     }
   ]
