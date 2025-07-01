@@ -38,6 +38,26 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const timeSlotsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Esta função só executa se NENHUMA data já estiver selecionada
+    if (!formData.date) {
+      const today = new Date();
+
+      // Formata a data de hoje para "YYYY-MM-DD"
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const todayDateString = `${year}-${month}-${day}`;
+
+      // Verifica se hoje não é um feriado e nem um dia no passado (o que não seria, mas é uma boa prática)
+      const dayNumber = today.getDate();
+      if (!isDayHoliday(dayNumber) && !isDateInPast(dayNumber)) {
+        // Se hoje for um dia válido, atualiza o formulário com a data de hoje
+        updateFormData({ date: todayDateString });
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchTimeSlots = async () => {
       if (formData.date && selectedBarber && barbershopId) {
         setLoadingTimes(true);
