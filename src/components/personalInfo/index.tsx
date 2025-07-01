@@ -99,7 +99,7 @@ export default function PersonalInfo({ formData, updateFormData, serviceNameDisp
           />
         </div>
 
-        <div>
+        {/*<div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Email <span className="text-[var(--loja-theme-color)]">*</span>
           </label>
@@ -113,7 +113,7 @@ export default function PersonalInfo({ formData, updateFormData, serviceNameDisp
             placeholder="seu@email.com"
             required
           />
-        </div>
+        </div>*/}
 
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
