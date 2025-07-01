@@ -47,7 +47,6 @@ export const Loja = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  // --- State Management ---
   const [barbershop, setBarbershop] = useState<Barbershop | null>(null);
   const [allServices, setAllServices] = useState<Service[]>([]);
   const [allBarbers, setAllBarbers] = useState<Barber[]>([]);
@@ -57,7 +56,6 @@ export const Loja = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;
 
-  // --- Data Fetching ---
   useEffect(() => {
     if (!slug) return;
 
@@ -90,7 +88,6 @@ export const Loja = () => {
     fetchInitialData();
   }, [slug]);
 
-  // --- Form Navigation & Data Handling ---
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -177,9 +174,6 @@ export const Loja = () => {
     return allBarbers.find((b) => b._id === formData.barber)?.name;
   }, [allBarbers, formData.barber]);
 
-  // ... dentro do seu componente Loja, antes do return
-
-  // Lógica para desabilitar o botão "Próximo" condicionalmente
   let isNextButtonDisabled = false;
   if (currentStep === 1) {
     // Na primeira etapa, desabilita se serviço OU barbeiro não estiverem selecionados
@@ -188,7 +182,14 @@ export const Loja = () => {
     // Na segunda etapa, desabilita se data OU hora não estiverem selecionadas
     isNextButtonDisabled = !formData.date || !formData.time;
   }
-  // Para currentStep === 3, o botão "Próximo" não é mostrado, é o de "Confirmar Agendamento".
+
+  const handleStepClick = (step: number) => {
+    // Permite o clique apenas se o passo desejado for menor ou igual ao
+    // passo mais alto que o usuário já completou.
+    if (step <= 1) {
+      setCurrentStep(step);
+    }
+  };
 
   // --- Render Logic ---
   if (!barbershop) {
@@ -202,7 +203,7 @@ export const Loja = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="bg-gray-50 flex-grow">
-        <div className="mx-auto max-w-md pb-4 md:max-w-2xl lg:max-w-4xl md:px-6 md:pb-8">
+        <div className="mx-auto max-w-xl pb-4 md:max-w-2xl lg:max-w-4xl md:px-6 md:pb-8">
           <div>
             {barbershop.logoUrl && (
               <img
@@ -214,7 +215,7 @@ export const Loja = () => {
           </div>
 
           <div className="mb-4 md:mb-8 px-4 md:px-0">
-            <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
+            <StepIndicator currentStep={currentStep} highestCompletedStep={1} onStepClick={handleStepClick} />
           </div>
 
           <div className="rounded-lg bg-white p-4 shadow-sm md:p-8">

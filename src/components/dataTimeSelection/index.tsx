@@ -33,7 +33,6 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [holidayMessage, setHolidayMessage] = useState<string | null>(null);
-
   const { isHoliday, getHolidayName } = useHolidays(currentMonth.getFullYear());
 
   const timeSlotsRef = useRef<HTMLDivElement>(null);
@@ -51,6 +50,13 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
           });
 
           const data: ApiResponse = response.data;
+
+          setTimeout(() => {
+            timeSlotsRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }, 200);
 
           if (data.isHoliday) {
             setHolidayMessage(`Esta data é feriado: ${data.holidayName}`);
@@ -115,13 +121,6 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
     }
 
     updateFormData({ date: selectedDate, time: "" });
-
-    setTimeout(() => {
-      timeSlotsRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 100);
   };
 
   const isDateInPast = (day: number) => {
