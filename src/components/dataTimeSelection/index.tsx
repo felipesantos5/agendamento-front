@@ -4,6 +4,14 @@ import axios from "axios";
 import { API_BASE_URL } from "@/config/BackendUrl";
 import { useHolidays } from "@/hooks/useHolidays";
 import { Spinner } from "../ui/spinnerLoading";
+import { AnimatePresence, motion } from "framer-motion";
+
+const sectionAnimation = {
+  initial: { opacity: 0, x: 50 }, // Começa invisível e 50px à direita
+  animate: { opacity: 1, x: 0 }, // Anima para visível e na posição original
+  exit: { opacity: 0, x: -50 }, // Anima para invisível e 50px à esquerda ao sair
+  transition: { duration: 0.3, ease: "easeInOut" },
+};
 
 interface TimeSlot {
   time: string;
@@ -33,7 +41,9 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [holidayMessage, setHolidayMessage] = useState<string | null>(null);
-  const { isHoliday, getHolidayName } = useHolidays(currentMonth.getFullYear());
+  const [scrollIntent, setScrollIntent] = useState(false);
+
+  const { isHoliday, getHolidayName } = useHolidays();
 
   const timeSlotsRef = useRef<HTMLDivElement>(null);
 
@@ -71,13 +81,6 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
 
           const data: ApiResponse = response.data;
 
-          setTimeout(() => {
-            timeSlotsRef.current?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }, 200);
-
           if (data.isHoliday) {
             setHolidayMessage(`Esta data é feriado: ${data.holidayName}`);
             setTimeSlots([]);
@@ -96,6 +99,29 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
     };
     fetchTimeSlots();
   }, [formData.date, selectedBarber, barbershopId, selectedServiceId]);
+
+  useEffect(() => {
+    // A condição para rolar continua a mesma: intenção do usuário + dados carregados
+    setTimeout(() => {
+      if (scrollIntent && !loadingTimes) {
+        const targetElement = timeSlotsRef.current;
+
+        if (targetElement) {
+          console.log("entrei");
+          const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
+
+          const offset = 390;
+
+          window.scrollTo({
+            top: elementPosition - offset,
+            behavior: "smooth",
+          });
+        }
+
+        setScrollIntent(false);
+      }
+    });
+  }, [loadingTimes, scrollIntent]);
 
   const filteredAndVisibleSlots = useMemo(() => {
     const today = new Date();
@@ -134,13 +160,14 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const handleDateSelect = (day: number) => {
     const selectedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    if (isHoliday(selectedDate)) {
-      const holidayName = getHolidayName(selectedDate);
-      alert(`Esta data é feriado (${holidayName}) e não está disponível para agendamento.`);
-      return;
-    }
+    // if (isHoliday(selectedDate)) {
+    //   const holidayName = getHolidayName(selectedDate);
+    //   alert(`Esta data é feriado (${holidayName}) e não está disponível para agendamento.`);
+    //   return;
+    // }
 
     updateFormData({ date: selectedDate, time: "" });
+    setScrollIntent(true);
   };
 
   const isDateInPast = (day: number) => {
@@ -155,49 +182,55 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Escolha a Data e Hora</h2>
-        {/* <p className="mt-1 text-sm text-gray-500">Selecione quando você gostaria de nos visitar</p> */}
-      </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        className="space-y-4 md:space-y-6"
+        initial={sectionAnimation.initial}
+        animate={sectionAnimation.animate}
+        exit={sectionAnimation.exit}
+        // transition={sectionAnimation.transition}
+      >
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center">Escolha a Data e Hora</h2>
+        </div>
 
-      <div className="lg:flex gap-8 md:min-h-[450px]">
-        <div className="space-y-4 lg:w-full">
-          <div className="flex items-center justify-between">
-            <label className="flex items-center text-base font-medium text-gray-700">
-              <Calendar className="mr-2 h-4 w-4" />
-              Selecione a Data
-            </label>
-            <div className="flex items-center space-x-2">
-              <button type="button" onClick={handlePrevMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
-                <ChevronLeft className="h-7 w-7" />
-              </button>
-              <span className="text-base font-medium">
-                {monthNames[month]} {year}
-              </span>
-              <button type="button" onClick={handleNextMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
-                <ChevronRight className="h-7 w-7" />
-              </button>
+        <div className="lg:flex gap-8 md:min-h-[450px]">
+          <div className="space-y-4 lg:w-full">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center text-base font-medium text-gray-700">
+                <Calendar className="mr-2 h-4 w-4" />
+                Selecione a Data
+              </label>
+              <div className="flex items-center space-x-2">
+                <button type="button" onClick={handlePrevMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
+                  <ChevronLeft className="h-7 w-7" />
+                </button>
+                <span className="text-base font-medium">
+                  {monthNames[month]} {year}
+                </span>
+                <button type="button" onClick={handleNextMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
+                  <ChevronRight className="h-7 w-7" />
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="overflow-hidden rounded-lg border border-gray-200">
-            <div className="grid grid-cols-7 bg-gray-50 text-center">
-              {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
-                <div key={day} className="py-2 text-xs font-medium text-gray-500">
-                  {day}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-px bg-gray-200">
-              {days.map((day, index) => (
-                <div key={index} className={`bg-white p-2 ${!day ? "cursor-default" : "cursor-pointer"}`}>
-                  {day && (
-                    <button
-                      type="button"
-                      disabled={isDateInPast(day) || isDayHoliday(day)}
-                      onClick={() => handleDateSelect(day)}
-                      className={`
+            <div className="overflow-hidden rounded-lg border border-gray-200">
+              <div className="grid grid-cols-7 bg-gray-50 text-center">
+                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
+                  <div key={day} className="py-2 text-xs font-medium text-gray-500">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-px bg-gray-200">
+                {days.map((day, index) => (
+                  <div key={index} className={`bg-white p-2 ${!day ? "cursor-default" : "cursor-pointer"}`}>
+                    {day && (
+                      <button
+                        type="button"
+                        disabled={isDateInPast(day) || isDayHoliday(day)}
+                        onClick={() => handleDateSelect(day)}
+                        className={`
         mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm relative transition-colors
         ${
           // 1. Estilo para dias que já passaram: Riscado e cinza
@@ -213,72 +246,79 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
               "hover:bg-[var(--loja-theme-color)]/30 cursor-pointer"
         }
     `}
-                      title={
-                        isDateInPast(day)
-                          ? "Data indisponível"
-                          : isDayHoliday(day)
-                          ? `Feriado: ${getHolidayName(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`)}`
-                          : undefined
-                      }
-                    >
-                      {day}
+                        title={
+                          isDateInPast(day)
+                            ? "Data indisponível"
+                            : isDayHoliday(day)
+                            ? `Feriado: ${getHolidayName(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`)}`
+                            : undefined
+                        }
+                      >
+                        {day}
 
-                      {/* Mantemos o ponto vermelho como um indicador extra apenas para feriados */}
-                      {isDayHoliday(day) && !isDateInPast(day) && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
-                    </button>
-                  )}
-                </div>
-              ))}
+                        {/* Mantemos o ponto vermelho como um indicador extra apenas para feriados */}
+                        {isDayHoliday(day) && !isDateInPast(day) && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div ref={timeSlotsRef} className="space-y-4 mt-4 lg:mt-0 lg:w-full">
-          <label className="flex items-center text-sm md:text-base font-medium text-gray-700">
-            <Clock className="mr-2 h-4 w-4" />
-            Selecione o Horário
-          </label>
+          <div ref={timeSlotsRef} className="space-y-4 lg:mt-0 lg:w-full mt-4">
+            <label className="flex items-center text-sm md:text-base font-medium text-gray-700">
+              <Clock className="mr-2 h-4 w-4" />
+              Selecione o Horário
+            </label>
 
-          {!selectedBarber && <p className="text-xs text-[var(--loja-theme-color)]">Por favor, selecione um barbeiro na etapa anterior.</p>}
-          {!formData.date && selectedBarber && <p className="text-sm text-gray-500 md:text-base">Por favor, selecione uma data primeiro.</p>}
+            {!selectedBarber && <p className="text-xs text-[var(--loja-theme-color)]">Por favor, selecione um barbeiro na etapa anterior.</p>}
+            {!formData.date && selectedBarber && <p className="text-sm text-gray-500 md:text-base">Por favor, selecione uma data primeiro.</p>}
 
-          {holidayMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-700 font-medium">🎉 {holidayMessage}</p>
-              <p className="text-xs text-red-600 mt-1">Escolha outra data para continuar com o agendamento.</p>
-            </div>
-          )}
-
-          <div className={`flex min-h-[240px] items-center justify-center w-full ${filteredAndVisibleSlots.length === 0 && "min-h-auto"}`}>
-            {loadingTimes ? (
-              <Spinner />
-            ) : (
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 w-full">
-                {filteredAndVisibleSlots.length > 0
-                  ? filteredAndVisibleSlots.map((slot) => (
-                      <button
-                        key={slot.time}
-                        type="button"
-                        disabled={slot.isBooked}
-                        onClick={() => updateFormData({ time: slot.time })}
-                        className={`rounded-md border p-2 text-center text-sm transition-colors cursor-pointer ${
-                          formData.time === slot.time && !slot.isBooked
-                            ? "border-[var(--loja-theme-color)] bg-[var(--loja-theme-color)]/10 text-[var(--loja-theme-color)] font-semibold"
-                            : slot.isBooked
-                            ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 line-through"
-                            : "border-gray-200 hover:border-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/20"
-                        }`}
-                      >
-                        {slot.time}
-                      </button>
-                    ))
-                  : formData.date &&
-                    !holidayMessage && <p className="col-span-full text-sm text-gray-500">Nenhum horário disponível para este dia.</p>}
+            {holidayMessage && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-700 font-medium">🎉 {holidayMessage}</p>
+                <p className="text-xs text-red-600 mt-1">Escolha outra data para continuar com o agendamento.</p>
               </div>
             )}
+
+            <div className={`flex min-h-[180px] items-baseline justify-center w-full ${filteredAndVisibleSlots.length === 0 && "min-h-auto"}`}>
+              {loadingTimes ? (
+                <Spinner />
+              ) : (
+                <motion.div
+                  className="grid grid-cols-4 gap-2 sm:grid-cols-4 w-full"
+                  key="slots"
+                  // variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {filteredAndVisibleSlots.length > 0
+                    ? filteredAndVisibleSlots.map((slot) => (
+                        <button
+                          key={slot.time}
+                          type="button"
+                          disabled={slot.isBooked}
+                          onClick={() => updateFormData({ time: slot.time })}
+                          className={`rounded-md border p-2 text-center text-sm transition-colors cursor-pointer ${
+                            formData.time === slot.time && !slot.isBooked
+                              ? "border-[var(--loja-theme-color)] bg-[var(--loja-theme-color)]/10 text-[var(--loja-theme-color)] font-semibold"
+                              : slot.isBooked
+                              ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 line-through"
+                              : "border-gray-200 hover:border-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/20"
+                          }`}
+                        >
+                          {slot.time}
+                        </button>
+                      ))
+                    : formData.date &&
+                      !holidayMessage && <p className="col-span-full text-sm text-gray-500">Nenhum horário disponível para este dia.</p>}
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
