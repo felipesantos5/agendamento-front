@@ -1,10 +1,15 @@
 // frontend/src/components/personalInfo/index.tsx
 
+import { AnimatePresence, motion } from "framer-motion";
 import React, { useState } from "react";
 
-// Supondo que você tenha o PhoneFormat em um local como "@/lib/phoneUtils"
-// Se não, você pode defini-lo aqui ou importá-lo de onde estiver.
-// Exemplo de definição (se não estiver importando):
+const sectionAnimation = {
+  initial: { opacity: 0, x: 50 }, // Começa invisível e 50px à direita
+  animate: { opacity: 1, x: 0 }, // Anima para visível e na posição original
+  exit: { opacity: 0, x: -50 }, // Anima para invisível e 50px à esquerda ao sair
+  transition: { duration: 0.3, ease: "easeInOut" },
+};
+
 const PhoneFormat = (value: string = ""): string => {
   if (!value) return "";
   return value
@@ -17,7 +22,7 @@ const PhoneFormat = (value: string = ""): string => {
 interface PersonalInfoProps {
   formData: {
     name: string;
-    email: string;
+    email?: string;
     phone: string;
     date: string; // Adicionando 'date' aqui se for usado no resumo
     time: string; // Adicionando 'time' aqui se for usado no resumo
@@ -76,30 +81,37 @@ export default function PersonalInfo({ formData, updateFormData, serviceNameDisp
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Dados Pessoais</h2>
-        <p className="mt-1 text-sm text-gray-500">Por favor, informe seus dados de contato.</p>
-      </div>
-
-      <div className="space-y-4">
+    <AnimatePresence mode="wait">
+      <motion.div
+        className="space-y-6"
+        initial={sectionAnimation.initial}
+        animate={sectionAnimation.animate}
+        exit={sectionAnimation.exit}
+        transition={sectionAnimation.transition}
+      >
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Nome Completo <span className="text-[var(--loja-theme-color)]">*</span>
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={(e) => updateFormData({ name: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--loja-theme-color)] focus:outline-none focus:ring-[var(--loja-theme-color)] sm:text-sm"
-            placeholder="Seu nome completo"
-            required
-          />
+          <h2 className="text-2xl font-semibold text-gray-900">Dados Pessoais</h2>
+          {/* <p className="mt-1 text-sm text-gray-500">Por favor, informe seus dados de contato.</p> */}
         </div>
 
-        {/*<div>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Nome Completo <span className="text-[var(--loja-theme-color)]">*</span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={(e) => updateFormData({ name: e.target.value })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--loja-theme-color)] focus:outline-none focus:ring-[var(--loja-theme-color)] sm:text-sm"
+              placeholder="Seu nome completo"
+              required
+            />
+          </div>
+
+          {/*<div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Email <span className="text-[var(--loja-theme-color)]">*</span>
           </label>
@@ -115,61 +127,62 @@ export default function PersonalInfo({ formData, updateFormData, serviceNameDisp
           />
         </div>*/}
 
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-            Celular (WhatsApp) <span className="text-[var(--loja-theme-color)]">*</span>
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={PhoneFormat(formData.phone)}
-            onChange={handlePhoneChange}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-[var(--loja-theme-color)] sm:text-sm ${
-              !isPhoneValid && formData.phone.length > 0
-                ? "border-[var(--loja-theme-color)] focus:border-[var(--loja-theme-color)]"
-                : "border-gray-300 focus:border-[var(--loja-theme-color)]"
-            }`}
-            placeholder="(XX) XXXXX-XXXX"
-            required
-            maxLength={15} // Tamanho da string formatada (XX) XXXXX-XXXX
-          />
-          {!isPhoneValid && formData.phone.length > 0 && <p className="mt-1 text-xs text-red-600">{phoneErrorMessage}</p>}
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              Celular (WhatsApp) <span className="text-[var(--loja-theme-color)]">*</span>
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={PhoneFormat(formData.phone)}
+              onChange={handlePhoneChange}
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-[var(--loja-theme-color)] sm:text-sm ${
+                !isPhoneValid && formData.phone.length > 0
+                  ? "border-[var(--loja-theme-color)] focus:border-[var(--loja-theme-color)]"
+                  : "border-gray-300 focus:border-[var(--loja-theme-color)]"
+              }`}
+              placeholder="(XX) XXXXX-XXXX"
+              required
+              maxLength={15} // Tamanho da string formatada (XX) XXXXX-XXXX
+            />
+            {!isPhoneValid && formData.phone.length > 0 && <p className="mt-1 text-xs text-red-600">{phoneErrorMessage}</p>}
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-md bg-gray-100 p-4">
-        <h3 className="text-sm font-semibold text-gray-800">Resumo do Agendamento</h3>
-        <div className="mt-2 space-y-1 text-sm text-gray-700">
-          {formData.service && (
-            <div className="flex justify-between">
-              <span>Serviço:</span>
-              <span className="font-medium">{serviceNameDisplay || `ID: ${formData.service}`}</span>
-            </div>
-          )}
+        <div className="rounded-md bg-gray-100 p-4">
+          <h3 className="text-sm font-semibold text-gray-800">Resumo do Agendamento</h3>
+          <div className="mt-2 space-y-1 text-sm text-gray-700">
+            {formData.service && (
+              <div className="flex justify-between">
+                <span>Serviço:</span>
+                <span className="font-medium">{serviceNameDisplay || `ID: ${formData.service}`}</span>
+              </div>
+            )}
 
-          {formData.barber && ( // Mudado de formData.attendant para formData.barber
-            <div className="flex justify-between">
-              <span>Profissional:</span>
-              <span className="font-medium">{barberNameDisplay || `ID: ${formData.barber}`}</span>
-            </div>
-          )}
+            {formData.barber && ( // Mudado de formData.attendant para formData.barber
+              <div className="flex justify-between">
+                <span>Profissional:</span>
+                <span className="font-medium">{barberNameDisplay || `ID: ${formData.barber}`}</span>
+              </div>
+            )}
 
-          {formData.date && (
-            <div className="flex justify-between">
-              <span>Data:</span>
-              <span className="font-medium">{formatDateForDisplay(formData.date)}</span>
-            </div>
-          )}
+            {formData.date && (
+              <div className="flex justify-between">
+                <span>Data:</span>
+                <span className="font-medium capitalize">{formatDateForDisplay(formData.date)}</span>
+              </div>
+            )}
 
-          {formData.time && (
-            <div className="flex justify-between">
-              <span>Horário:</span>
-              <span className="font-medium">{formData.time}</span>
-            </div>
-          )}
+            {formData.time && (
+              <div className="flex justify-between">
+                <span>Horário:</span>
+                <span className="font-medium">{formData.time}</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

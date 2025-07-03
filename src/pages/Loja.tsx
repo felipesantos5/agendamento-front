@@ -14,6 +14,7 @@ import StepIndicator from "@/components/stepIndicator";
 import { SocialLinks } from "@/components/socialLinks";
 import { Service } from "@/types/barberShop";
 import { API_BASE_URL } from "@/config/BackendUrl";
+import { Badge } from "@/components/ui/badge";
 
 // Type Definitions
 type Barbershop = {
@@ -23,6 +24,19 @@ type Barbershop = {
   themeColor: string;
   instagram: string;
   contact: string;
+  address: {
+    rua: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+  };
+  workingHours: {
+    day: string;
+    start: string;
+    end: string;
+  }[];
 };
 
 type Barber = {
@@ -200,6 +214,10 @@ export const Loja = () => {
     );
   }
 
+  const fullAddress = `${barbershop.address.rua}, ${barbershop.address.numero} - ${barbershop.address.bairro}, ${barbershop.address.cidade} - ${barbershop.address.estado}`;
+
+  const todayName = new Date().toLocaleDateString("pt-BR", { weekday: "long" });
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="bg-gray-50 flex-grow">
@@ -287,9 +305,44 @@ export const Loja = () => {
               )}
             </form>
           </div>
+
+          <div className="p-6 md:p-8 rounded-lg space-y-8 text-gray-900">
+            {/* Seção de Localização */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold">Localização</h3>
+              <div className="flex items-start justify-between">
+                <p className=" max-w-xs">{fullAddress}</p>
+                {/* <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+            <MapPin className="h-6 w-6" />
+          </a> */}
+              </div>
+            </div>
+
+            <hr className="border-gray-700" />
+
+            {/* Seção de Horário de Atendimento */}
+            <div className="space-y-3">
+              <h3 className="text-xl font-bold">Horário de atendimento</h3>
+              <div className="space-y-2">
+                {barbershop.workingHours.map((wh, index) => (
+                  <div key={index} className="flex justify-between items-center ">
+                    <span className="flex items-center">
+                      {wh.day}
+                      {wh.day.toLowerCase() === todayName.toLowerCase() && (
+                        <Badge variant="secondary" className="ml-3 bg-green-500 ">
+                          Hoje
+                        </Badge>
+                      )}
+                    </span>
+                    <span>{`${wh.start} - ${wh.end}`}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </main>
-      {barbershop && <SocialLinks instagramUrl={barbershop.instagram} whatsappNumber={barbershop.contact} barbershopName={barbershop.name} />}
+      {barbershop && <SocialLinks instagram={barbershop.instagram} whatsappNumber={barbershop.contact} barbershopName={barbershop.name} />}
     </div>
   );
 };

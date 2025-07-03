@@ -20,8 +20,9 @@ export interface Barbershop {
   _id: string;
   name: string;
   themeColor?: string;
+  slug: string;
   logoUrl?: string;
-  instagramUrl?: string;
+  instagram?: string;
   whatsappNumber?: string;
   contact?: string; // Mantendo o contact se ainda for usado
   address: Address;
@@ -39,6 +40,7 @@ export interface Service {
 export interface Barber {
   _id: string;
   name: string;
+  image: string;
   availability: Availability[]; // Supondo que Availability é parecido com WorkingHour
 }
 

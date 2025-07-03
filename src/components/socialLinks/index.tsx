@@ -1,5 +1,5 @@
 interface AppFooterProps {
-  instagramUrl?: string | null;
+  instagram?: string | null;
   whatsappNumber?: string | null; // Ex: "48991234567" ou "(48) 99123-4567"
   barbershopName?: string | null;
 }
@@ -34,7 +34,7 @@ const formatWhatsAppLink = (number?: string | null): string | null => {
 };
 
 export function SocialLinks({
-  instagramUrl,
+  instagram,
   whatsappNumber,
   barbershopName = "Sua Barbearia de Confiança", // Nome padrão
 }: AppFooterProps) {
@@ -55,11 +55,11 @@ export function SocialLinks({
           </a>
         </p>
 
-        {(instagramUrl || whatsappLink) && (
+        {(instagram || whatsappLink) && (
           <div className="flex justify-center items-center gap-4">
-            {instagramUrl && (
+            {instagram && (
               <a
-                href={instagramUrl.startsWith("http") ? instagramUrl : `https://instagram.com/${instagramUrl}`}
+                href={instagram.startsWith("http") ? instagram : `https://instagram.com/${instagram}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Instagram de ${barbershopName}`}
