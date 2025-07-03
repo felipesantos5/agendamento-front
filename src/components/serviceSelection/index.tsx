@@ -61,11 +61,11 @@ export default function ServiceSelection({
             initial={sectionAnimation.initial}
             animate={sectionAnimation.animate}
             exit={sectionAnimation.exit}
-            transition={sectionAnimation.transition}
+            // transition={sectionAnimation.transition}
             className="space-y-4"
           >
             <div className="text-center md:text-left">
-              <h2 className="text-2xl font-semibold text-gray-900">1. Escolha o Serviço</h2>
+              <h2 className="text-2xl font-semibold text-gray-900">Escolha o Serviço</h2>
               {/* <p className="mt-1 text-sm text-gray-500">Clique no serviço que você deseja agendar.</p> */}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -107,11 +107,11 @@ export default function ServiceSelection({
             initial={sectionAnimation.initial}
             animate={sectionAnimation.animate}
             exit={sectionAnimation.exit}
-            transition={sectionAnimation.transition}
+            // transition={sectionAnimation.transition}
             className="space-y-4"
           >
             <div className="text-center md:text-left">
-              <h2 className="text-2xl font-semibold text-gray-900">2. Escolha o Profissional</h2>
+              <h2 className="text-2xl font-semibold text-gray-900">Escolha o Profissional</h2>
               {/* <p className="mt-1 text-sm text-gray-500 md:ml-12">Selecione com quem você quer ser atendido.</p> */}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

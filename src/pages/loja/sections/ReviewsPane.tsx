@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import apiClient from "@/services/api";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
@@ -96,12 +96,6 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
     }
   };
 
-  const averageRating = useMemo(() => {
-    if (reviews.length === 0) return "N/A";
-    const total = reviews.reduce((acc, review) => acc + review.rating, 0);
-    return (total / reviews.length).toFixed(1);
-  }, [reviews]);
-
   if (isLoading) {
     return (
       <div className="flex justify-center p-10">
@@ -112,18 +106,6 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
 
   return (
     <div className="p-4 sm:p-6 space-y-8">
-      {/* Card de Resumo das Avaliações */}
-      {/* <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Avaliações da Barbearia</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-2">
-          <span className="text-5xl font-bold">{averageRating}</span>
-          <StarRating rating={Math.round(Number(averageRating))} />
-          <p className="text-sm text-muted-foreground">{reviews.length} avaliações</p>
-        </CardContent>
-      </Card> */}
-
       <div className="space-y-4">
         {reviews.map((review) => (
           <Card key={review._id} className="gap-2 py-3">

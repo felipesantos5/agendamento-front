@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import apiClient from "@/services/api";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -123,7 +123,7 @@ export function MyBookingsPage() {
                 const statusInfo = getStatusInfo(booking.status);
                 const canBeCancelled = booking.status === "booked" || booking.status === "confirmed";
                 return (
-                  <Card key={booking._id} className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg">
+                  <Card key={booking._id} className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0">
                     <CardHeader className="p-4 sm:p-6">
                       <div className="flex justify-between items-start gap-4">
                         {/* Link para a página da barbearia */}
@@ -164,7 +164,29 @@ export function MyBookingsPage() {
                               Cancelar Agendamento
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>{/* ... seu AlertDialogContent ... */}</AlertDialogContent>
+
+                          {/* --- COLE ESTE CONTEÚDO COMPLETO AQUI --- */}
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação irá cancelar o seu agendamento para o serviço de <strong>{booking.service.name}</strong> no dia{" "}
+                                <strong>{format(new Date(booking.time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</strong>.
+                                <br />
+                                <br />
+                                Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Manter Agendamento</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleCancelBooking(booking)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
+                              >
+                                Sim, Cancelar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
                         </AlertDialog>
                       </CardFooter>
                     )}

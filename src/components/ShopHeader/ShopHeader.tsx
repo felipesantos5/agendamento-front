@@ -1,6 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, Star } from "lucide-react";
 
 // Usaremos a tipagem que você já tem, adaptada para as props
 interface Barbershop {

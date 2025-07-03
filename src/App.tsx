@@ -1,5 +1,4 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-// import { Loja } from "./pages/Loja";
 import { Loja } from "./pages/loja/index.tsx";
 import { BookingSuccessPage } from "./components/BookingSuccessPage";
 import { CustomerLoginPage } from "./pages/CustomerLoginPage";

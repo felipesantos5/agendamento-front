@@ -6,29 +6,11 @@ import { useHolidays } from "@/hooks/useHolidays";
 import { Spinner } from "../ui/spinnerLoading";
 import { AnimatePresence, motion } from "framer-motion";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.5,
-      ease: "easeInOut",
-      // Anima os filhos (os botões de horário) em cascata
-      staggerChildren: 0.05,
-    },
-  },
-};
-
 const sectionAnimation = {
   initial: { opacity: 0, x: 50 }, // Começa invisível e 50px à direita
   animate: { opacity: 1, x: 0 }, // Anima para visível e na posição original
   exit: { opacity: 0, x: -50 }, // Anima para invisível e 50px à esquerda ao sair
   transition: { duration: 0.3, ease: "easeInOut" },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
 };
 
 interface TimeSlot {
@@ -61,7 +43,7 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const [holidayMessage, setHolidayMessage] = useState<string | null>(null);
   const [scrollIntent, setScrollIntent] = useState(false);
 
-  const { isHoliday, getHolidayName } = useHolidays(currentMonth.getFullYear());
+  const { isHoliday, getHolidayName } = useHolidays();
 
   const timeSlotsRef = useRef<HTMLDivElement>(null);
 
@@ -178,11 +160,11 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const handleDateSelect = (day: number) => {
     const selectedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    if (isHoliday(selectedDate)) {
-      const holidayName = getHolidayName(selectedDate);
-      alert(`Esta data é feriado (${holidayName}) e não está disponível para agendamento.`);
-      return;
-    }
+    // if (isHoliday(selectedDate)) {
+    //   const holidayName = getHolidayName(selectedDate);
+    //   alert(`Esta data é feriado (${holidayName}) e não está disponível para agendamento.`);
+    //   return;
+    // }
 
     updateFormData({ date: selectedDate, time: "" });
     setScrollIntent(true);
@@ -206,10 +188,10 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
         initial={sectionAnimation.initial}
         animate={sectionAnimation.animate}
         exit={sectionAnimation.exit}
-        transition={sectionAnimation.transition}
+        // transition={sectionAnimation.transition}
       >
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900">Escolha a Data e Hora</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center">Escolha a Data e Hora</h2>
         </div>
 
         <div className="lg:flex gap-8 md:min-h-[450px]">
@@ -307,7 +289,7 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
                 <motion.div
                   className="grid grid-cols-4 gap-2 sm:grid-cols-4 w-full"
                   key="slots"
-                  variants={containerVariants}
+                  // variants={containerVariants}
                   initial="hidden"
                   animate="visible"
                 >

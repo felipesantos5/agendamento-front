@@ -8,14 +8,6 @@ import ServiceSelection from "@/components/serviceSelection";
 import DateTimeSelection from "@/components/dataTimeSelection";
 import PersonalInfo from "@/components/personalInfo";
 import { Service, Barber, Barbershop } from "@/types/barberShop";
-import { motion } from "framer-motion";
-
-const stepAnimation = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -20 },
-  transition: { duration: 0.3, ease: "easeInOut" },
-};
 
 // Definindo as props que o componente receberá da página principal
 interface BookingPaneProps {
@@ -139,15 +131,8 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
   return (
     <div className="p-4 pb-8md:p-6 lg:p-8 mt-1">
       <form onSubmit={handleSubmit} className="flex h-full flex-col">
-        {/* Indicador de Passos */}
-        {/* <div className="mb-6 md:mb-8">
-          <StepIndicator currentStep={currentStep} highestCompletedStep={highestCompletedStep} onStepClick={handleStepClick} />
-        </div> */}
-
-        {/* Conteúdo do Passo Atual */}
         <div className="flex-grow">
           {currentStep === 1 && (
-            // <motion.div key="step1" {...stepAnimation}>
             <ServiceSelection
               services={allServices}
               barbers={allBarbers}
@@ -156,30 +141,25 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
               onSelectService={(serviceId) => updateFormData({ service: serviceId })}
               onSelectBarber={(barberId) => updateFormData({ barber: barberId })}
             />
-            // </motion.div>
           )}
 
           {currentStep === 2 && (
-            <motion.div key="step2" {...stepAnimation}>
-              <DateTimeSelection
-                formData={formData}
-                updateFormData={updateFormData}
-                barbershopId={barbershop._id}
-                selectedBarber={formData.barber}
-                selectedServiceId={formData.service}
-              />
-            </motion.div>
+            <DateTimeSelection
+              formData={formData}
+              updateFormData={updateFormData}
+              barbershopId={barbershop._id}
+              selectedBarber={formData.barber}
+              selectedServiceId={formData.service}
+            />
           )}
 
           {currentStep === 3 && (
-            <motion.div key="step3" {...stepAnimation}>
-              <PersonalInfo
-                formData={formData}
-                updateFormData={updateFormData}
-                serviceNameDisplay={selectedServiceName}
-                barberNameDisplay={selectedBarberName}
-              />
-            </motion.div>
+            <PersonalInfo
+              formData={formData}
+              updateFormData={updateFormData}
+              serviceNameDisplay={selectedServiceName}
+              barberNameDisplay={selectedBarberName}
+            />
           )}
         </div>
 
@@ -194,7 +174,6 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
             Voltar
           </Button>
 
-          {/* O botão Próximo foi removido. O botão de Confirmar só aparece no último passo. */}
           {currentStep === totalSteps && (
             <Button type="submit" disabled={isSubmitting} className="bg-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/90">
               {isSubmitting ? "Agendando..." : "Confirmar Agendamento"}

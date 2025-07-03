@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { API_BASE_URL } from "@/config/BackendUrl";
+import { useState } from "react";
 
 interface Holiday {
   date: string;
@@ -8,27 +6,10 @@ interface Holiday {
   type: string;
 }
 
-export const useHolidays = (year: number) => {
+export const useHolidays = () => {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   const fetchHolidays = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const response = await axios.get(`${API_BASE_URL}/holidays/holidays/${year}`);
-  //       console.log('response.data.holidays',response.data.holidays)
-  //       setHolidays(response.data.holidays);
-  //     } catch (error) {
-  //       console.error('Erro ao buscar feriados:', error);
-  //       setHolidays([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchHolidays();
-  // }, [year]);
+  console.log(setHolidays);
 
   const isHoliday = (date: string): boolean => {
     return holidays.some((holiday) => {
@@ -45,5 +26,5 @@ export const useHolidays = (year: number) => {
     return holiday ? holiday.name : null;
   };
 
-  return { holidays, loading, isHoliday, getHolidayName };
+  return { holidays, isHoliday, getHolidayName };
 };
