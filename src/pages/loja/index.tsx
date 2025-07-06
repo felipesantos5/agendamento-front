@@ -1,24 +1,22 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import apiClient from "@/services/api";
 import { toast } from "sonner";
 import axios from "axios";
-
-// Importando as tipagens que você já tem
 import { Barbershop, Service, Barber } from "@/types/barberShop";
-
-// Importando os novos componentes que criamos
-// import { ShopHeader } from "./ShopHeader";
-// import { CategoryTabs } from "./CategoryTabs";
-// import { BookingPane } from "./panes/BookingPane";
-// import { ReviewsPane } from "./panes/ReviewsPane";
-// import { PlansPane } from "./panes/PlansPane";
 import { Loader2 } from "lucide-react";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { BookingPane } from "./sections/BookingPane";
 import { ShopHeader } from "@/components/ShopHeader/ShopHeader";
 import { ReviewsPane } from "./sections/ReviewsPane";
 import { ShopInfo } from "@/components/ShopInfo";
+import { PlansPane } from "./sections/PlansPane";
+import { Plan } from "@/types/plans";
+
+export type Tab = {
+  id: string;
+  label: string;
+};
 
 // Tipo para controlar a aba ativa
 type TabId = "agendamento" | "avaliacoes" | "planos";
@@ -30,6 +28,7 @@ export function Loja() {
   const [allServices, setAllServices] = useState<Service[]>([]);
   const [allBarbers, setAllBarbers] = useState<Barber[]>([]);
 
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>("agendamento");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,13 +57,15 @@ export function Loja() {
           document.documentElement.style.setProperty("--loja-theme-color", currentBarbershop.themeColor);
         }
 
-        const [servicesResponse, barbersResponse] = await Promise.all([
+        const [servicesResponse, barbersResponse, plansResponse] = await Promise.all([
           apiClient.get(`/barbershops/${currentBarbershop._id}/services`),
           apiClient.get(`/barbershops/${currentBarbershop._id}/barbers`),
+          apiClient.get(`/api/barbershops/${currentBarbershop._id}/plans`),
         ]);
 
         setAllServices(servicesResponse.data);
         setAllBarbers(barbersResponse.data);
+        setPlans(plansResponse.data);
       } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 404) {
           window.location.replace("https://compre.barbeariagendamento.com.br");
@@ -79,6 +80,20 @@ export function Loja() {
 
     fetchAllData();
   }, [slug]);
+
+  const visibleTabs = useMemo(() => {
+    const tabs: Tab[] = [
+      { id: "agendamento", label: "Serviços" },
+      { id: "avaliacoes", label: "Avaliações" },
+    ];
+
+    // Só adiciona a aba 'Planos' se houver planos cadastrados
+    if (plans.length > 0) {
+      tabs.push({ id: "planos", label: "Planos" });
+    }
+
+    return tabs;
+  }, [plans]);
 
   const handleBookNowClick = () => {
     setActiveTab("agendamento");
@@ -105,7 +120,7 @@ export function Loja() {
       <div className="max-w-4xl mx-auto">
         <ShopHeader barbershop={barbershop} onBookNowClick={handleBookNowClick} />
 
-        <CategoryTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <CategoryTabs activeTab={activeTab} onTabChange={setActiveTab} tabs={visibleTabs} />
 
         <main>
           <div ref={bookingSectionRef}>
@@ -113,7 +128,8 @@ export function Loja() {
           </div>
 
           {activeTab === "avaliacoes" && <ReviewsPane barbershopId={barbershop._id} />}
-          {/* {activeTab === 'planos' && <PlansPane />} */}
+
+          {activeTab === "planos" && <PlansPane barbershopId={barbershop._id} />}
         </main>
         <ShopInfo barbershop={barbershop} availability={barbershop.workingHours} />
       </div>

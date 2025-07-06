@@ -2,28 +2,28 @@ import { Button } from "@/components/ui/button";
 
 // Tipos para as abas
 type TabId = "agendamento" | "avaliacoes" | "planos";
-const TABS: { id: TabId; label: string }[] = [
-  { id: "agendamento", label: "Serviços" },
-  { id: "avaliacoes", label: "Avaliações" },
-  { id: "planos", label: "Planos" },
-  // Adicione novas abas aqui no futuro (ex: 'Produtos', 'Fidelidade')
-];
+
+export type Tab = {
+  id: string;
+  label: string;
+};
 
 interface CategoryTabsProps {
   activeTab: TabId;
   onTabChange: (tabId: TabId) => void;
+  tabs: Tab[];
 }
 
-export function CategoryTabs({ activeTab, onTabChange }: CategoryTabsProps) {
+export function CategoryTabs({ activeTab, onTabChange, tabs }: CategoryTabsProps) {
   return (
     // Container que permite rolagem horizontal em telas pequenas
     <div className="border-b border-border overflow-x-auto">
       <div className="flex justify-center px-4" role="tablist">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <Button
             key={tab.id}
             variant="ghost"
-            onClick={() => onTabChange(tab.id)}
+            onClick={() => onTabChange(tab.id as TabId)}
             role="tab"
             aria-selected={activeTab === tab.id}
             className={`
