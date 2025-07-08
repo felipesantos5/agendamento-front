@@ -161,8 +161,6 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
           </p>
         </div>
       )}
-
-      {/* Lista de Avaliações Existentes */}
     </div>
   );
 }

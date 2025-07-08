@@ -46,7 +46,6 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const [scrollIntent, setScrollIntent] = useState(false);
 
   const [fullyBookedDays, setFullyBookedDays] = useState<Set<string>>(new Set());
-  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
   const { isHoliday, getHolidayName } = useHolidays();
 
@@ -112,7 +111,6 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
     }
 
     const fetchMonthlyAvailability = async () => {
-      setIsLoadingAvailability(true);
       try {
         const response = await apiClient.get(`/barbershops/${barbershopId}/bookings/${selectedBarber}/monthly-availability`, {
           params: {
@@ -125,8 +123,6 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
       } catch (error) {
         console.error("Erro ao buscar disponibilidade do mês", error);
         toast.error("Não foi possível verificar a disponibilidade do mês.");
-      } finally {
-        setIsLoadingAvailability(false);
       }
     };
 
