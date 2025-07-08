@@ -5,6 +5,8 @@ import { API_BASE_URL } from "@/config/BackendUrl";
 import { useHolidays } from "@/hooks/useHolidays";
 import { Spinner } from "../ui/spinnerLoading";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
+import apiClient from "@/services/api";
 
 const sectionAnimation = {
   initial: { opacity: 0, x: 50 }, // Começa invisível e 50px à direita
@@ -42,6 +44,9 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [holidayMessage, setHolidayMessage] = useState<string | null>(null);
   const [scrollIntent, setScrollIntent] = useState(false);
+
+  const [fullyBookedDays, setFullyBookedDays] = useState<Set<string>>(new Set());
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
   const { isHoliday, getHolidayName } = useHolidays();
 
@@ -99,6 +104,40 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
     };
     fetchTimeSlots();
   }, [formData.date, selectedBarber, barbershopId, selectedServiceId]);
+
+  useEffect(() => {
+    // Só busca se tivermos as informações necessárias
+    if (!barbershopId || !selectedBarber || !selectedServiceId) {
+      return;
+    }
+
+    const fetchMonthlyAvailability = async () => {
+      setIsLoadingAvailability(true);
+      try {
+        const response = await apiClient.get(`/barbershops/${barbershopId}/bookings/${selectedBarber}/monthly-availability`, {
+          params: {
+            year: currentMonth.getFullYear(),
+            month: currentMonth.getMonth() + 1,
+            serviceId: selectedServiceId,
+          },
+        });
+        setFullyBookedDays(new Set(response.data.unavailableDays));
+      } catch (error) {
+        console.error("Erro ao buscar disponibilidade do mês", error);
+        toast.error("Não foi possível verificar a disponibilidade do mês.");
+      } finally {
+        setIsLoadingAvailability(false);
+      }
+    };
+
+    fetchMonthlyAvailability();
+    // Depende dessas variáveis para refazer a busca quando o mês, barbeiro ou serviço mudar
+  }, [currentMonth, selectedBarber, selectedServiceId, barbershopId]);
+
+  const isDayFullyBooked = (day: number) => {
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return fullyBookedDays.has(dateString);
+  };
 
   useEffect(() => {
     // A condição para rolar continua a mesma: intenção do usuário + dados carregados
@@ -228,13 +267,15 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
                     {day && (
                       <button
                         type="button"
-                        disabled={isDateInPast(day) || isDayHoliday(day)}
+                        disabled={isDateInPast(day) || isDayHoliday(day) || isDayFullyBooked(day)}
                         onClick={() => handleDateSelect(day)}
                         className={`
         mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm relative transition-colors
         ${
           // 1. Estilo para dias que já passaram: Riscado e cinza
-          isDateInPast(day)
+          isDayFullyBooked(day)
+            ? "text-gray-400 cursor-not-allowed line-through"
+            : isDateInPast(day)
             ? "text-gray-400 cursor-not-allowed line-through decoration-2"
             : // 2. Estilo para feriados: Fundo vermelho claro e texto vermelho
             isDayHoliday(day)
@@ -247,7 +288,9 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
         }
     `}
                         title={
-                          isDateInPast(day)
+                          isDayFullyBooked(day)
+                            ? "Horários esgotados para este dia"
+                            : isDateInPast(day)
                             ? "Data indisponível"
                             : isDayHoliday(day)
                             ? `Feriado: ${getHolidayName(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`)}`
