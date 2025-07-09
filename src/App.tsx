@@ -10,7 +10,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/:slug" element={<Loja />} />
-        <Route path="/agendamento-sucesso" element={<BookingSuccessPage />} />
+        <Route path="/:slug/agendamento-sucesso" element={<BookingSuccessPage />} />
 
         <Route path="/entrar" element={<CustomerLoginPage />} />
 

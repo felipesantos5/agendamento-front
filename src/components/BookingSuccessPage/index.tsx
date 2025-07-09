@@ -1,6 +1,3 @@
-// frontend/src/pages/BookingSuccessPage.tsx
-
-import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { CalendarDays, Clock, User, Scissors, ShieldAlert /* Ícone para fallback */ } from "lucide-react";
 import { Button } from "@/components/ui/button"; //
@@ -29,15 +26,6 @@ export function BookingSuccessPage() {
   const state = location.state as LocationState | null; // Tipagem para o state
   const bookingDetails = state?.bookingDetails;
   const barbershopSlug = state?.barbershopSlug;
-
-  useEffect(() => {
-    // Limpa o state do histórico para que, se o usuário atualizar a página ou voltar,
-    // os detalhes não persistam de forma inadequada.
-    window.history.replaceState({}, document.title);
-
-    // Scroll para o topo da página ao montar
-    window.scrollTo(0, 0);
-  }, []);
 
   if (!bookingDetails) {
     // Se não houver detalhes do agendamento (ex: acesso direto à URL),

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import apiClient from "@/services/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ const initialFormData = {
 
 export function BookingPane({ barbershop, allServices, allBarbers }: BookingPaneProps) {
   const navigate = useNavigate();
+  const { slug } = useParams<{ slug: string }>();
 
   // Todos os estados que antes estavam em Loja.tsx agora vivem aqui
   const [formData, setFormData] = useState(initialFormData);
@@ -102,7 +103,7 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
       const response = await apiClient.post(`/barbershops/${barbershop._id}/bookings`, bookingPayload);
 
       if (response.status === 201 && barbershop) {
-        navigate("/agendamento-sucesso", {
+        navigate(`/${slug}/agendamento-sucesso`, {
           replace: true,
           state: {
             bookingDetails: {
