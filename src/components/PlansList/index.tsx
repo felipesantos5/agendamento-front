@@ -30,7 +30,6 @@ export function PlansList({ barbershopId }: PlansListProps) {
       try {
         setIsLoading(true);
         const response = await apiClient.get(`/api/barbershops/${barbershopId}/plans`);
-        console.log(`a`, response.data);
         setPlans(response.data);
       } catch (error) {
         console.error("Erro ao carregar planos:", error);

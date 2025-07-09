@@ -142,7 +142,6 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
         const targetElement = timeSlotsRef.current;
 
         if (targetElement) {
-          console.log("entrei");
           const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
 
           const offset = 390;

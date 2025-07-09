@@ -61,7 +61,6 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
     try {
       setIsLoading(true);
       const response = await apiClient.get(`api/barbershops/${barbershopId}/reviews`);
-      console.log("response.data", response.data);
       setReviews(response.data);
     } catch (error) {
       toast.error("Erro ao buscar avaliações.");

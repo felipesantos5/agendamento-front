@@ -41,7 +41,6 @@ export function MyBookingsPage() {
   const fetchBookings = async () => {
     try {
       const response = await apiClient.get<PopulatedBooking[]>("/api/auth/customer/me/bookings");
-      console.log(`response`, response.data);
       setBookings(response.data);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
