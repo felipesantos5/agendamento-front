@@ -26,7 +26,11 @@ const initialFormData = {
   phone: "",
 };
 
-export function BookingPane({ barbershop, allServices, allBarbers }: BookingPaneProps) {
+export function BookingPane({
+  barbershop,
+  allServices,
+  allBarbers,
+}: BookingPaneProps) {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
 
@@ -100,7 +104,10 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
     };
 
     try {
-      const response = await apiClient.post(`/barbershops/${barbershop._id}/bookings`, bookingPayload);
+      const response = await apiClient.post(
+        `/barbershops/${barbershop._id}/bookings`,
+        bookingPayload
+      );
 
       if (response.status === 201 && barbershop) {
         navigate(`/${slug}/agendamento-sucesso`, {
@@ -119,15 +126,23 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
         });
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.error ?? "Erro ao agendar. Tente outro horário.");
+      toast.error(
+        err.response?.data?.error ?? "Erro ao agendar. Tente outro horário."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // Encontra os nomes selecionados para exibir no resumo
-  const selectedServiceName = useMemo(() => allServices.find((s) => s._id === formData.service)?.name, [allServices, formData.service]);
-  const selectedBarberName = useMemo(() => allBarbers.find((b) => b._id === formData.barber)?.name, [allBarbers, formData.barber]);
+  const selectedServiceName = useMemo(
+    () => allServices.find((s) => s._id === formData.service)?.name,
+    [allServices, formData.service]
+  );
+  const selectedBarberName = useMemo(
+    () => allBarbers.find((b) => b._id === formData.barber)?.name,
+    [allBarbers, formData.barber]
+  );
 
   return (
     <div className="p-4 pb-8md:p-6 lg:p-8 mt-1">
@@ -139,8 +154,12 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
               barbers={allBarbers}
               selectedService={formData.service}
               selectedBarber={formData.barber}
-              onSelectService={(serviceId) => updateFormData({ service: serviceId })}
-              onSelectBarber={(barberId) => updateFormData({ barber: barberId })}
+              onSelectService={(serviceId) =>
+                updateFormData({ service: serviceId })
+              }
+              onSelectBarber={(barberId) =>
+                updateFormData({ barber: barberId })
+              }
             />
           )}
 
@@ -169,14 +188,20 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
             type="button"
             variant="outline"
             onClick={handlePrevious}
-            className={`transition-all ${currentStep === 1 ? "invisible" : "visible"}`}
+            className={`transition-all ${
+              currentStep === 1 ? "hidden" : "visible"
+            }`}
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Voltar
           </Button>
 
           {currentStep === totalSteps && (
-            <Button type="submit" disabled={isSubmitting} className="bg-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/90">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/90"
+            >
               {isSubmitting ? "Agendando..." : "Confirmar Agendamento"}
               <Check className="ml-1 h-4 w-4" />
             </Button>

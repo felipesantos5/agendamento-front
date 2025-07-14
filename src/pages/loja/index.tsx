@@ -43,7 +43,9 @@ export function Loja() {
     const fetchAllData = async () => {
       try {
         setIsLoading(true);
-        const barbershopResponse = await apiClient.get(`/barbershops/slug/${slug}`);
+        const barbershopResponse = await apiClient.get(
+          `/barbershops/slug/${slug}`
+        );
         const currentBarbershop = barbershopResponse.data;
 
         if (!currentBarbershop) {
@@ -54,14 +56,18 @@ export function Loja() {
         document.title = `Agendar em ${currentBarbershop.name}`;
 
         if (currentBarbershop.themeColor) {
-          document.documentElement.style.setProperty("--loja-theme-color", currentBarbershop.themeColor);
+          document.documentElement.style.setProperty(
+            "--loja-theme-color",
+            currentBarbershop.themeColor
+          );
         }
 
-        const [servicesResponse, barbersResponse, plansResponse] = await Promise.all([
-          apiClient.get(`/barbershops/${currentBarbershop._id}/services`),
-          apiClient.get(`/barbershops/${currentBarbershop._id}/barbers`),
-          apiClient.get(`/api/barbershops/${currentBarbershop._id}/plans`),
-        ]);
+        const [servicesResponse, barbersResponse, plansResponse] =
+          await Promise.all([
+            apiClient.get(`/barbershops/${currentBarbershop._id}/services`),
+            apiClient.get(`/barbershops/${currentBarbershop._id}/barbers`),
+            apiClient.get(`/api/barbershops/${currentBarbershop._id}/plans`),
+          ]);
 
         setAllServices(servicesResponse.data);
         setAllBarbers(barbersResponse.data);
@@ -99,7 +105,10 @@ export function Loja() {
     setActiveTab("agendamento");
 
     setTimeout(() => {
-      bookingSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      bookingSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }, 100);
   };
 
@@ -112,26 +121,50 @@ export function Loja() {
   }
 
   if (!barbershop) {
-    return <div className="flex h-screen items-center justify-center">Ocorreu um erro ao carregar esta página.</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Ocorreu um erro ao carregar esta página.
+      </div>
+    );
   }
 
   return (
     <div className="bg-background dark:bg-gray-950">
       <div className="max-w-4xl mx-auto">
-        <ShopHeader barbershop={barbershop} onBookNowClick={handleBookNowClick} />
+        <ShopHeader
+          barbershop={barbershop}
+          onBookNowClick={handleBookNowClick}
+        />
 
-        <CategoryTabs activeTab={activeTab} onTabChange={setActiveTab} tabs={visibleTabs} />
+        <CategoryTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabs={visibleTabs}
+        />
 
         <main>
           <div ref={bookingSectionRef}>
-            {activeTab === "agendamento" && <BookingPane barbershop={barbershop} allServices={allServices} allBarbers={allBarbers} />}
+            {activeTab === "agendamento" && (
+              <BookingPane
+                barbershop={barbershop}
+                allServices={allServices}
+                allBarbers={allBarbers}
+              />
+            )}
           </div>
 
-          {activeTab === "avaliacoes" && <ReviewsPane barbershopId={barbershop._id} />}
+          {activeTab === "avaliacoes" && (
+            <ReviewsPane barbershopId={barbershop._id} />
+          )}
 
-          {activeTab === "planos" && <PlansPane barbershopId={barbershop._id} />}
+          {activeTab === "planos" && (
+            <PlansPane barbershopId={barbershop._id} />
+          )}
         </main>
-        <ShopInfo barbershop={barbershop} availability={barbershop.workingHours} />
+        <ShopInfo
+          barbershop={barbershop}
+          availability={barbershop.workingHours}
+        />
       </div>
     </div>
   );

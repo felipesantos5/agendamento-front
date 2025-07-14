@@ -12,7 +12,10 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Loader2 } from "lucide-react";
 import { PhoneFormat } from "@/helper/phoneFormater";
 
-export function LoginForm({ className, ...props }: React.ComponentProps<"form">) {
+export function LoginForm({
+  className,
+  ...props
+}: React.ComponentProps<"form">) {
   const [step, setStep] = useState<"enterPhone" | "enterOtp">("enterPhone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -28,8 +31,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
     }
     setIsLoading(true);
     try {
-      await apiClient.post(`${API_BASE_URL}/api/auth/customer/request-otp`, { phone });
-      toast.success("Código enviado!", { description: "Verifique seu WhatsApp e insira o código abaixo." });
+      await apiClient.post(`${API_BASE_URL}/api/auth/customer/request-otp`, {
+        phone,
+      });
+      toast.success("Código enviado!", {
+        description: "Verifique seu WhatsApp e insira o código abaixo.",
+      });
       setStep("enterOtp");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Falha ao enviar o código.");
@@ -45,7 +52,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
     }
     setIsLoading(true);
     try {
-      const response = await apiClient.post(`${API_BASE_URL}/api/auth/customer/verify-otp`, { phone, otp });
+      const response = await apiClient.post(
+        `${API_BASE_URL}/api/auth/customer/verify-otp`,
+        { phone, otp }
+      );
       const { token, customer } = response.data;
 
       login(token, customer); // Salva o token e dados no contexto
@@ -54,7 +64,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
       // Redireciona para a página de "Minha Conta" ou para o início
       navigate("/meus-agendamentos");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Falha ao verificar o código.");
+      toast.error(
+        error.response?.data?.error || "Falha ao verificar o código."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -94,13 +106,24 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
                   <InputOTPSlot index={5} />
                 </InputOTPGroup>
               </InputOTP>
-              <Button type="button" variant="link" size="sm" className="p-0 h-auto" onClick={() => setStep("enterPhone")}>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="p-0 h-auto"
+                onClick={() => setStep("enterPhone")}
+              >
                 Usar outro número?
               </Button>
             </div>
           )}
         </div>
-        <Button type="button" className="w-full" disabled={isLoading} onClick={step === "enterPhone" ? handleRequestOtp : handleVerifyOtp}>
+        <Button
+          type="button"
+          className="w-full"
+          disabled={isLoading}
+          onClick={step === "enterPhone" ? handleRequestOtp : handleVerifyOtp}
+        >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {step === "enterPhone" ? "Enviar Código" : "Confirmar e Entrar"}
         </Button>

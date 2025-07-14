@@ -19,6 +19,7 @@ export interface WorkingHour {
 export interface Barbershop {
   _id: string;
   name: string;
+  description?: string
   themeColor?: string;
   slug: string;
   logoUrl?: string;

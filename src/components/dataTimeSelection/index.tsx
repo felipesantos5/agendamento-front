@@ -38,14 +38,22 @@ interface DateTimeSelectionProps {
   selectedServiceId: string | undefined;
 }
 
-export default function DateTimeSelection({ formData, updateFormData, barbershopId, selectedBarber, selectedServiceId }: DateTimeSelectionProps) {
+export default function DateTimeSelection({
+  formData,
+  updateFormData,
+  barbershopId,
+  selectedBarber,
+  selectedServiceId,
+}: DateTimeSelectionProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [holidayMessage, setHolidayMessage] = useState<string | null>(null);
   const [scrollIntent, setScrollIntent] = useState(false);
 
-  const [fullyBookedDays, setFullyBookedDays] = useState<Set<string>>(new Set());
+  const [fullyBookedDays, setFullyBookedDays] = useState<Set<string>>(
+    new Set()
+  );
 
   const { isHoliday, getHolidayName } = useHolidays();
 
@@ -79,9 +87,12 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
         setHolidayMessage(null);
 
         try {
-          const response = await axios.get(`${API_BASE_URL}/barbershops/${barbershopId}/barbers/${selectedBarber}/free-slots`, {
-            params: { date: formData.date, serviceId: selectedServiceId },
-          });
+          const response = await axios.get(
+            `${API_BASE_URL}/barbershops/${barbershopId}/barbers/${selectedBarber}/free-slots`,
+            {
+              params: { date: formData.date, serviceId: selectedServiceId },
+            }
+          );
 
           const data: ApiResponse = response.data;
 
@@ -112,13 +123,16 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
 
     const fetchMonthlyAvailability = async () => {
       try {
-        const response = await apiClient.get(`/barbershops/${barbershopId}/bookings/${selectedBarber}/monthly-availability`, {
-          params: {
-            year: currentMonth.getFullYear(),
-            month: currentMonth.getMonth() + 1,
-            serviceId: selectedServiceId,
-          },
-        });
+        const response = await apiClient.get(
+          `/barbershops/${barbershopId}/bookings/${selectedBarber}/monthly-availability`,
+          {
+            params: {
+              year: currentMonth.getFullYear(),
+              month: currentMonth.getMonth() + 1,
+              serviceId: selectedServiceId,
+            },
+          }
+        );
         setFullyBookedDays(new Set(response.data.unavailableDays));
       } catch (error) {
         console.error("Erro ao buscar disponibilidade do mês", error);
@@ -131,7 +145,9 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   }, [currentMonth, selectedBarber, selectedServiceId, barbershopId]);
 
   const isDayFullyBooked = (day: number) => {
-    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
     return fullyBookedDays.has(dateString);
   };
 
@@ -142,7 +158,8 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
         const targetElement = timeSlotsRef.current;
 
         if (targetElement) {
-          const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
+          const elementPosition =
+            targetElement.getBoundingClientRect().top + window.scrollY;
 
           const offset = 390;
 
@@ -159,7 +176,9 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
 
   const filteredAndVisibleSlots = useMemo(() => {
     const today = new Date();
-    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayString = `${today.getFullYear()}-${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (formData.date !== todayString) {
       return timeSlots;
@@ -176,14 +195,29 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
     });
   }, [timeSlots, formData.date]);
 
-  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+  const getDaysInMonth = (year: number, month: number) =>
+    new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) =>
+    new Date(year, month, 1).getDay();
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   const daysInMonth = getDaysInMonth(year, month);
   const firstDayOfMonth = getFirstDayOfMonth(year, month);
-  const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const monthNames = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
   const days = Array(firstDayOfMonth)
     .fill(null)
     .concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
@@ -192,7 +226,10 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const handleNextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
 
   const handleDateSelect = (day: number) => {
-    const selectedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const selectedDate = `${year}-${String(month + 1).padStart(
+      2,
+      "0"
+    )}-${String(day).padStart(2, "0")}`;
 
     // if (isHoliday(selectedDate)) {
     //   const holidayName = getHolidayName(selectedDate);
@@ -207,11 +244,16 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
   const isDateInPast = (day: number) => {
     const today = new Date();
     const selectedDate = new Date(year, month, day);
-    return selectedDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return (
+      selectedDate <
+      new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    );
   };
 
   const isDayHoliday = (day: number) => {
-    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
     return isHoliday(dateString);
   };
 
@@ -225,7 +267,9 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
         // transition={sectionAnimation.transition}
       >
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900 text-center">Escolha a Data e Hora</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center">
+            Escolha a Data e Hora
+          </h2>
         </div>
 
         <div className="lg:flex gap-8 md:min-h-[450px]">
@@ -236,13 +280,21 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
                 Selecione a Data
               </label>
               <div className="flex items-center space-x-2">
-                <button type="button" onClick={handlePrevMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
+                >
                   <ChevronLeft className="h-7 w-7" />
                 </button>
                 <span className="text-base font-medium">
                   {monthNames[month]} {year}
                 </span>
-                <button type="button" onClick={handleNextMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
+                >
                   <ChevronRight className="h-7 w-7" />
                 </button>
               </div>
@@ -250,19 +302,33 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
 
             <div className="overflow-hidden rounded-lg border border-gray-200">
               <div className="grid grid-cols-7 bg-gray-50 text-center">
-                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
-                  <div key={day} className="py-2 text-xs font-medium text-gray-500">
-                    {day}
-                  </div>
-                ))}
+                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map(
+                  (day) => (
+                    <div
+                      key={day}
+                      className="py-2 text-xs font-medium text-gray-500"
+                    >
+                      {day}
+                    </div>
+                  )
+                )}
               </div>
               <div className="grid grid-cols-7 gap-px bg-gray-200">
                 {days.map((day, index) => (
-                  <div key={index} className={`bg-white p-2 ${!day ? "cursor-default" : "cursor-pointer"}`}>
+                  <div
+                    key={index}
+                    className={`bg-white p-2 ${
+                      !day ? "cursor-default" : "cursor-pointer"
+                    }`}
+                  >
                     {day && (
                       <button
                         type="button"
-                        disabled={isDateInPast(day) || isDayHoliday(day) || isDayFullyBooked(day)}
+                        disabled={
+                          isDateInPast(day) ||
+                          isDayHoliday(day) ||
+                          isDayFullyBooked(day)
+                        }
                         onClick={() => handleDateSelect(day)}
                         className={`
         mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm relative transition-colors
@@ -276,7 +342,10 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
             isDayHoliday(day)
             ? "bg-red-100 text-red-500 font-semibold cursor-not-allowed"
             : // 3. Estilo para o dia atualmente selecionado
-            formData.date === `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+            formData.date ===
+              `${year}-${String(month + 1).padStart(2, "0")}-${String(
+                day
+              ).padStart(2, "0")}`
             ? "bg-[var(--loja-theme-color)] text-white"
             : // 4. Estilo padrão para dias disponíveis
               "hover:bg-[var(--loja-theme-color)]/30 cursor-pointer"
@@ -288,14 +357,21 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
                             : isDateInPast(day)
                             ? "Data indisponível"
                             : isDayHoliday(day)
-                            ? `Feriado: ${getHolidayName(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`)}`
+                            ? `Feriado: ${getHolidayName(
+                                `${year}-${String(month + 1).padStart(
+                                  2,
+                                  "0"
+                                )}-${String(day).padStart(2, "0")}`
+                              )}`
                             : undefined
                         }
                       >
                         {day}
 
                         {/* Mantemos o ponto vermelho como um indicador extra apenas para feriados */}
-                        {isDayHoliday(day) && !isDateInPast(day) && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
+                        {isDayHoliday(day) && !isDateInPast(day) && (
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                        )}
                       </button>
                     )}
                   </div>
@@ -310,17 +386,33 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
               Selecione o Horário
             </label>
 
-            {!selectedBarber && <p className="text-xs text-[var(--loja-theme-color)]">Por favor, selecione um barbeiro na etapa anterior.</p>}
-            {!formData.date && selectedBarber && <p className="text-sm text-gray-500 md:text-base">Por favor, selecione uma data primeiro.</p>}
+            {!selectedBarber && (
+              <p className="text-xs text-[var(--loja-theme-color)]">
+                Por favor, selecione um barbeiro na etapa anterior.
+              </p>
+            )}
+            {!formData.date && selectedBarber && (
+              <p className="text-sm text-gray-500 md:text-base">
+                Por favor, selecione uma data primeiro.
+              </p>
+            )}
 
             {holidayMessage && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-700 font-medium">🎉 {holidayMessage}</p>
-                <p className="text-xs text-red-600 mt-1">Escolha outra data para continuar com o agendamento.</p>
+                <p className="text-sm text-red-700 font-medium">
+                  🎉 {holidayMessage}
+                </p>
+                <p className="text-xs text-red-600 mt-1">
+                  Escolha outra data para continuar com o agendamento.
+                </p>
               </div>
             )}
 
-            <div className={`flex min-h-[180px] items-baseline justify-center w-full ${filteredAndVisibleSlots.length === 0 && "min-h-auto"}`}>
+            <div
+              className={`flex min-h-[180px] items-baseline justify-center w-full ${
+                filteredAndVisibleSlots.length === 0 && "min-h-auto"
+              }`}
+            >
               {loadingTimes ? (
                 <Spinner />
               ) : (
@@ -350,7 +442,11 @@ export default function DateTimeSelection({ formData, updateFormData, barbershop
                         </button>
                       ))
                     : formData.date &&
-                      !holidayMessage && <p className="col-span-full text-sm text-gray-500">Nenhum horário disponível para este dia.</p>}
+                      !holidayMessage && (
+                        <p className="col-span-full text-sm text-gray-500">
+                          Nenhum horário disponível para este dia.
+                        </p>
+                      )}
                 </motion.div>
               )}
             </div>

@@ -5,7 +5,13 @@ import { toast } from "sonner";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 
 // Imports de UI
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -21,7 +27,15 @@ interface Review {
 }
 
 // Componente para renderizar as estrelas de forma visual
-const StarRating = ({ rating, setRating, interactive = false }: { rating: number; setRating?: (r: number) => void; interactive?: boolean }) => (
+const StarRating = ({
+  rating,
+  setRating,
+  interactive = false,
+}: {
+  rating: number;
+  setRating?: (r: number) => void;
+  interactive?: boolean;
+}) => (
   <div className="flex gap-1 text-yellow-400">
     {[...Array(5)].map((_, i) => {
       const ratingValue = i + 1;
@@ -60,7 +74,9 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
     if (!barbershopId) return;
     try {
       setIsLoading(true);
-      const response = await apiClient.get(`api/barbershops/${barbershopId}/reviews`);
+      const response = await apiClient.get(
+        `api/barbershops/${barbershopId}/reviews`
+      );
       setReviews(response.data);
     } catch (error) {
       toast.error("Erro ao buscar avaliações.");
@@ -107,20 +123,30 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
     <div className="p-4 sm:p-6 space-y-8">
       <div className="space-y-4">
         {reviews.map((review) => (
-          <Card key={review._id} className="gap-2 py-3">
-            <CardHeader className="gap-0 px-3">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">{review.customer.name}</span>
-                <StarRating rating={review.rating} />
-              </div>
-              <CardDescription>{new Date(review.createdAt).toLocaleDateString("pt-BR")}</CardDescription>
-            </CardHeader>
-            {review.comment && (
-              <CardContent className="px-3">
-                <p className="text-muted-foreground italic">"{review.comment}"</p>
-              </CardContent>
+          <>
+            {review.customer?.name && (
+              <Card key={review._id} className="gap-2 py-3">
+                <CardHeader className="gap-0 px-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">
+                      {review.customer?.name}
+                    </span>
+                    <StarRating rating={review.rating} />
+                  </div>
+                  <CardDescription>
+                    {new Date(review.createdAt).toLocaleDateString("pt-BR")}
+                  </CardDescription>
+                </CardHeader>
+                {review.comment && (
+                  <CardContent className="px-3">
+                    <p className="text-muted-foreground italic">
+                      "{review.comment}"
+                    </p>
+                  </CardContent>
+                )}
+              </Card>
             )}
-          </Card>
+          </>
         ))}
       </div>
 
@@ -131,7 +157,11 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
           <div>
             <form onSubmit={handleSubmitReview} className="space-y-4">
               <div className="flex flex-col">
-                <StarRating rating={myRating} setRating={setMyRating} interactive />
+                <StarRating
+                  rating={myRating}
+                  setRating={setMyRating}
+                  interactive
+                />
               </div>
               <div>
                 <Label htmlFor="comment">Seu comentário (opcional)</Label>
@@ -144,7 +174,9 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
                 />
               </div>
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Enviar Avaliação
               </Button>
             </form>
@@ -153,7 +185,10 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
       ) : (
         <div className="text-center p-4 border-2 border-dashed rounded-lg">
           <p className="text-muted-foreground">
-            <Link to="/entrar" className="font-bold text-[var(--loja-theme-color)] underline">
+            <Link
+              to="/entrar"
+              className="font-bold text-[var(--loja-theme-color)] underline"
+            >
               Faça seu login
             </Link>{" "}
             para deixar uma avaliação.

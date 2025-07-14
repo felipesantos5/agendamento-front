@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import apiClient from "@/services/api";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,13 +24,21 @@ import {
 import { toast } from "sonner";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Clock, Home, Loader2, LogOut, Scissors, Store, User } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Home,
+  Loader2,
+  LogOut,
+  Scissors,
+  User,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 // Supondo uma tipagem para o agendamento populado
 interface PopulatedBooking {
   _id: string;
-  barbershop: { _id: string; name: string; slug: string };
+  barbershop: { _id: string; name: string; slug: string; logoUrl: string };
   barber: { name: string };
   service: { name: string; price: number };
   time: string;
@@ -40,7 +54,9 @@ export function MyBookingsPage() {
   // Função para buscar os agendamentos
   const fetchBookings = async () => {
     try {
-      const response = await apiClient.get<PopulatedBooking[]>("/api/auth/customer/me/bookings");
+      const response = await apiClient.get<PopulatedBooking[]>(
+        "/api/auth/customer/me/bookings"
+      );
       setBookings(response.data);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
@@ -49,6 +65,8 @@ export function MyBookingsPage() {
       setIsLoading(false);
     }
   };
+
+  console.log(`bookings`, bookings);
 
   useEffect(() => {
     fetchBookings();
@@ -64,10 +82,16 @@ export function MyBookingsPage() {
   // Função para cancelar um agendamento
   const handleCancelBooking = async (booking: PopulatedBooking) => {
     try {
-      await apiClient.put(`/barbershops/${booking.barbershop._id}/bookings/${booking._id}/cancel`);
+      await apiClient.put(
+        `/barbershops/${booking.barbershop._id}/bookings/${booking._id}/cancel`
+      );
       toast.success("Agendamento cancelado com sucesso!");
       // Atualiza a lista localmente para refletir a mudança instantaneamente
-      setBookings((prev) => prev.map((b) => (b._id === booking._id ? { ...b, status: "canceled" } : b)));
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === booking._id ? { ...b, status: "canceled" } : b
+        )
+      );
     } catch (error) {
       toast.error("Ocorreu um erro ao cancelar o agendamento.");
     }
@@ -104,39 +128,73 @@ export function MyBookingsPage() {
         {/* --- NOVO HEADER --- */}
         <header className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold">Meus Agendamentos</h1>
-            <p className="text-muted-foreground">Olá, {customer?.name?.split(" ")[0]}!</p>
+            <h1 className="text-3xl md:text-4xl font-bold">
+              Meus Agendamentos
+            </h1>
+            <p className="text-muted-foreground">
+              Olá, {customer?.name?.split(" ")[0]}!
+            </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="h-5 w-5" />
-            <span className="sr-only">Sair</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="text-sm font-semibold hover:underline cursor-pointer"
+            >
+              ← Voltar
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut className="h-5 w-5" />
+              <span className="sr-only">Sair</span>
+            </Button>
+          </div>
         </header>
 
         {/* --- SEÇÃO DE PRÓXIMOS AGENDAMENTOS COM NOVO CARD --- */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Próximos</h2>
+          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
+            Próximos
+          </h2>
           {upcomingBookings.length > 0 ? (
             <div className="space-y-6">
               {upcomingBookings.map((booking) => {
                 const statusInfo = getStatusInfo(booking.status);
-                const canBeCancelled = booking.status === "booked" || booking.status === "confirmed";
+                const canBeCancelled =
+                  booking.status === "booked" || booking.status === "confirmed";
                 return (
-                  <Card key={booking._id} className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0">
+                  <Card
+                    key={booking._id}
+                    className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0"
+                  >
                     <CardHeader className="p-4 sm:p-6">
                       <div className="flex justify-between items-start gap-4">
                         {/* Link para a página da barbearia */}
-                        <Link to={`/${booking.barbershop.slug}`} className="flex items-center gap-2 group">
-                          <Store className="h-5 w-5 text-muted-foreground group-hover:text-[var(--loja-theme-color)]" />
-                          <CardTitle className="text-xl md:text-2xl group-hover:underline">{booking.barbershop.name}</CardTitle>
+                        <Link
+                          to={`/${booking.barbershop.slug}`}
+                          className="flex items-center gap-2 group"
+                        >
+                          {/* <Store className="h-5 w-5 text-muted-foreground group-hover:text-[var(--loja-theme-color)]" /> */}
+                          <img
+                            src={booking.barbershop.logoUrl}
+                            alt="logo barbearia"
+                            className="w-24"
+                          />
+                          <CardTitle className="text-xl md:text-2xl group-hover:underline">
+                            {booking.barbershop.name}
+                          </CardTitle>
                         </Link>
-                        <Badge className={`${statusInfo.className} border`}>{statusInfo.text}</Badge>
+                        <Badge className={`${statusInfo.className} border`}>
+                          {statusInfo.text}
+                        </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
                       <div className="flex items-center gap-3">
                         <Scissors className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-semibold">{booking.service.name}</span>
+                        <span className="font-semibold">
+                          {booking.service.name}
+                        </span>
                       </div>
                       <div className="flex items-center gap-3">
                         <User className="h-5 w-5 text-muted-foreground" />
@@ -146,12 +204,21 @@ export function MyBookingsPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <Calendar className="h-5 w-5 text-muted-foreground" />
-                        <span>{format(new Date(booking.time), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
+                        <span>
+                          {format(
+                            new Date(booking.time),
+                            "EEEE, dd 'de' MMMM",
+                            { locale: ptBR }
+                          )}
+                        </span>
                       </div>
                       <div className="flex items-center gap-3">
                         <Clock className="h-5 w-5 text-muted-foreground" />
                         <span>
-                          às <strong>{format(new Date(booking.time), "HH:mm")}h</strong>
+                          às{" "}
+                          <strong>
+                            {format(new Date(booking.time), "HH:mm")}h
+                          </strong>
                         </span>
                       </div>
                     </CardContent>
@@ -159,7 +226,10 @@ export function MyBookingsPage() {
                       <CardFooter className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t">
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="w-full sm:w-auto">
+                            <Button
+                              variant="destructive"
+                              className="w-full sm:w-auto"
+                            >
                               Cancelar Agendamento
                             </Button>
                           </AlertDialogTrigger>
@@ -167,17 +237,30 @@ export function MyBookingsPage() {
                           {/* --- COLE ESTE CONTEÚDO COMPLETO AQUI --- */}
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Você tem certeza?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Esta ação irá cancelar o seu agendamento para o serviço de <strong>{booking.service.name}</strong> no dia{" "}
-                                <strong>{format(new Date(booking.time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</strong>.
+                                Esta ação irá cancelar o seu agendamento para o
+                                serviço de{" "}
+                                <strong>{booking.service.name}</strong> no dia{" "}
+                                <strong>
+                                  {format(
+                                    new Date(booking.time),
+                                    "dd/MM/yyyy 'às' HH:mm",
+                                    { locale: ptBR }
+                                  )}
+                                </strong>
+                                .
                                 <br />
                                 <br />
                                 Esta ação não pode ser desfeita.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Manter Agendamento</AlertDialogCancel>
+                              <AlertDialogCancel>
+                                Manter Agendamento
+                              </AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => handleCancelBooking(booking)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
@@ -196,39 +279,60 @@ export function MyBookingsPage() {
           ) : (
             <div className="text-center py-10 px-4 border-2 border-dashed rounded-lg">
               <Home className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-semibold">Nenhum agendamento futuro</h3>
-              <p className="mt-1 text-sm text-gray-500">Que tal marcar um novo horário?</p>
+              <h3 className="mt-2 text-sm font-semibold">
+                Nenhum agendamento futuro
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Que tal marcar um novo horário?
+              </p>
             </div>
           )}
         </section>
 
         {/* --- SEÇÃO DE HISTÓRICO COM NOVO CARD --- */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Histórico</h2>
+          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
+            Histórico
+          </h2>
           {pastBookings.length > 0 ? (
             <div className="space-y-4">
               {pastBookings.map((booking) => {
                 const statusInfo = getStatusInfo(booking.status);
                 return (
-                  <Card key={booking._id} className="bg-white/70 dark:bg-gray-800/70 opacity-80">
+                  <Card
+                    key={booking._id}
+                    className="bg-white/70 dark:bg-gray-800/70 opacity-80"
+                  >
                     <CardHeader className="p-4">
                       <div className="flex justify-between items-center">
                         <div>
                           <p className="font-bold">{booking.service.name}</p>
-                          <p className="text-sm text-muted-foreground">{booking.barbershop.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {booking.barbershop.name}
+                          </p>
                         </div>
-                        <Badge className={`${statusInfo.className} border`}>{statusInfo.text}</Badge>
+                        <Badge className={`${statusInfo.className} border`}>
+                          {statusInfo.text}
+                        </Badge>
                       </div>
                     </CardHeader>
                     <CardFooter className="p-4 border-t">
-                      <p className="text-xs text-muted-foreground">{format(new Date(booking.time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(
+                          new Date(booking.time),
+                          "dd/MM/yyyy 'às' HH:mm",
+                          { locale: ptBR }
+                        )}
+                      </p>
                     </CardFooter>
                   </Card>
                 );
               })}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Você ainda não possui histórico de agendamentos.</p>
+            <p className="text-sm text-muted-foreground">
+              Você ainda não possui histórico de agendamentos.
+            </p>
           )}
         </section>
       </div>
