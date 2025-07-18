@@ -79,6 +79,15 @@ export function MyBookingsPage() {
     return { upcomingBookings: upcoming, pastBookings: past };
   }, [bookings]);
 
+  // Paginação para o histórico
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyPerPage = 5;
+  const totalHistoryPages = Math.ceil(pastBookings.length / historyPerPage);
+  const paginatedPastBookings = pastBookings.slice(
+    (historyPage - 1) * historyPerPage,
+    historyPage * historyPerPage
+  );
+
   // Função para cancelar um agendamento
   const handleCancelBooking = async (booking: PopulatedBooking) => {
     try {
@@ -103,7 +112,13 @@ export function MyBookingsPage() {
     toast.info("Você foi desconectado.");
   };
 
-  const getStatusInfo = (status: PopulatedBooking["status"]) => {
+  const getStatusInfo = (
+    status: PopulatedBooking["status"],
+    isHistory = false
+  ) => {
+    if (isHistory && (status === "booked" || status === "confirmed")) {
+      return { text: "Realizado", className: "bg-blue-100 text-blue-800" };
+    }
     switch (status) {
       case "completed":
         return { text: "Concluído", className: "bg-green-100 text-green-800" };
@@ -163,116 +178,114 @@ export function MyBookingsPage() {
                 const canBeCancelled =
                   booking.status === "booked" || booking.status === "confirmed";
                 return (
-                  <Card
+                  <Link
                     key={booking._id}
-                    className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0"
+                    to={`/${booking.barbershop.slug}`}
+                    className="block group"
+                    style={{ textDecoration: "none" }}
                   >
-                    <CardHeader className="p-4 sm:p-6">
-                      <div className="flex justify-between items-start gap-4">
-                        {/* Link para a página da barbearia */}
-                        <Link
-                          to={`/${booking.barbershop.slug}`}
-                          className="flex items-center gap-2 group"
-                        >
-                          {/* <Store className="h-5 w-5 text-muted-foreground group-hover:text-[var(--loja-theme-color)]" /> */}
-                          <img
-                            src={booking.barbershop.logoUrl}
-                            alt="logo barbearia"
-                            className="w-24"
-                          />
-                          <CardTitle className="text-xl md:text-2xl group-hover:underline">
-                            {booking.barbershop.name}
-                          </CardTitle>
-                        </Link>
-                        <Badge className={`${statusInfo.className} border`}>
-                          {statusInfo.text}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
-                      <div className="flex items-center gap-3">
-                        <Scissors className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-semibold">
-                          {booking.service.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <User className="h-5 w-5 text-muted-foreground" />
-                        <span>
-                          com <strong>{booking.barber.name}</strong>
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-muted-foreground" />
-                        <span>
-                          {format(
-                            new Date(booking.time),
-                            "EEEE, dd 'de' MMMM",
-                            { locale: ptBR }
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Clock className="h-5 w-5 text-muted-foreground" />
-                        <span>
-                          às{" "}
-                          <strong>
-                            {format(new Date(booking.time), "HH:mm")}h
-                          </strong>
-                        </span>
-                      </div>
-                    </CardContent>
-                    {canBeCancelled && (
-                      <CardFooter className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              className="w-full sm:w-auto"
-                            >
-                              Cancelar Agendamento
-                            </Button>
-                          </AlertDialogTrigger>
-
-                          {/* --- COLE ESTE CONTEÚDO COMPLETO AQUI --- */}
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Você tem certeza?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta ação irá cancelar o seu agendamento para o
-                                serviço de{" "}
-                                <strong>{booking.service.name}</strong> no dia{" "}
-                                <strong>
-                                  {format(
-                                    new Date(booking.time),
-                                    "dd/MM/yyyy 'às' HH:mm",
-                                    { locale: ptBR }
-                                  )}
-                                </strong>
-                                .
-                                <br />
-                                <br />
-                                Esta ação não pode ser desfeita.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>
-                                Manter Agendamento
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleCancelBooking(booking)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
+                    <Card className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0 group-hover:ring-2 group-hover:ring-blue-200">
+                      <CardHeader className="p-4 sm:p-6">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={booking.barbershop.logoUrl}
+                              alt="logo barbearia"
+                              className="w-24"
+                            />
+                            <CardTitle className="text-xl md:text-2xl group-hover:underline">
+                              {booking.barbershop.name}
+                            </CardTitle>
+                          </div>
+                          <Badge className={`${statusInfo.className} border`}>
+                            {statusInfo.text}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
+                        <div className="flex items-center gap-3">
+                          <Scissors className="h-5 w-5 text-muted-foreground" />
+                          <span className="font-semibold">
+                            {booking.service.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                          <span>
+                            com <strong>{booking.barber.name}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Calendar className="h-5 w-5 text-muted-foreground" />
+                          <span>
+                            {format(
+                              new Date(booking.time),
+                              "EEEE, dd 'de' MMMM",
+                              { locale: ptBR }
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Clock className="h-5 w-5 text-muted-foreground" />
+                          <span>
+                            às{" "}
+                            <strong>
+                              {format(new Date(booking.time), "HH:mm")}h
+                            </strong>
+                          </span>
+                        </div>
+                      </CardContent>
+                      {canBeCancelled && (
+                        <CardFooter className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="destructive"
+                                className="w-full sm:w-auto"
+                                onClick={(e) => e.preventDefault()}
                               >
-                                Sim, Cancelar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </CardFooter>
-                    )}
-                  </Card>
+                                Cancelar Agendamento
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Você tem certeza?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação irá cancelar o seu agendamento para
+                                  o serviço de{" "}
+                                  <strong>{booking.service.name}</strong> no dia{" "}
+                                  <strong>
+                                    {format(
+                                      new Date(booking.time),
+                                      "dd/MM/yyyy 'às' HH:mm",
+                                      { locale: ptBR }
+                                    )}
+                                  </strong>
+                                  .
+                                  <br />
+                                  <br />
+                                  Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>
+                                  Manter Agendamento
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleCancelBooking(booking)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
+                                >
+                                  Sim, Cancelar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </CardFooter>
+                      )}
+                    </Card>
+                  </Link>
                 );
               })}
             </div>
@@ -295,40 +308,100 @@ export function MyBookingsPage() {
             Histórico
           </h2>
           {pastBookings.length > 0 ? (
-            <div className="space-y-4">
-              {pastBookings.map((booking) => {
-                const statusInfo = getStatusInfo(booking.status);
-                return (
-                  <Card
-                    key={booking._id}
-                    className="bg-white/70 dark:bg-gray-800/70 opacity-80"
+            <>
+              <div className="space-y-4">
+                {paginatedPastBookings.map((booking) => {
+                  const statusInfo = getStatusInfo(booking.status, true);
+                  return (
+                    <Link
+                      key={booking._id}
+                      to={`/${booking.barbershop.slug}`}
+                      className="block group"
+                      style={{ textDecoration: "none" }}
+                    >
+                      <Card className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0 group-hover:ring-2 group-hover:ring-blue-200">
+                        <CardHeader className="p-4 sm:p-6">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={booking.barbershop.logoUrl}
+                                alt="logo barbearia"
+                                className="w-24"
+                              />
+                              <CardTitle className="text-xl md:text-2xl group-hover:underline">
+                                {booking.barbershop.name}
+                              </CardTitle>
+                            </div>
+                            <Badge className={`${statusInfo.className} border`}>
+                              {statusInfo.text}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
+                          <div className="flex items-center gap-3">
+                            <Scissors className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-semibold">
+                              {booking.service.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <User className="h-5 w-5 text-muted-foreground" />
+                            <span>
+                              com <strong>{booking.barber.name}</strong>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Calendar className="h-5 w-5 text-muted-foreground" />
+                            <span>
+                              {format(
+                                new Date(booking.time),
+                                "EEEE, dd 'de' MMMM",
+                                { locale: ptBR }
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Clock className="h-5 w-5 text-muted-foreground" />
+                            <span>
+                              às{" "}
+                              <strong>
+                                {format(new Date(booking.time), "HH:mm")}h
+                              </strong>
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+              {/* Paginação */}
+              {totalHistoryPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                    disabled={historyPage === 1}
                   >
-                    <CardHeader className="p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-bold">{booking.service.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {booking.barbershop.name}
-                          </p>
-                        </div>
-                        <Badge className={`${statusInfo.className} border`}>
-                          {statusInfo.text}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardFooter className="p-4 border-t">
-                      <p className="text-xs text-muted-foreground">
-                        {format(
-                          new Date(booking.time),
-                          "dd/MM/yyyy 'às' HH:mm",
-                          { locale: ptBR }
-                        )}
-                      </p>
-                    </CardFooter>
-                  </Card>
-                );
-              })}
-            </div>
+                    Anterior
+                  </Button>
+                  <span className="mx-2 text-sm">
+                    Página {historyPage} de {totalHistoryPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))
+                    }
+                    disabled={historyPage === totalHistoryPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <p className="text-sm text-muted-foreground">
               Você ainda não possui histórico de agendamentos.

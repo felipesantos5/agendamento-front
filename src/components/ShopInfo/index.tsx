@@ -45,15 +45,16 @@ export function ShopInfo({ barbershop, availability }: ShopInfoProps) {
       <section className="space-y-2">
         <h3 className="text-lg font-semibold">Localização</h3>
         <div className="flex items-start justify-between gap-4">
-          <p className="">{fullAddress}</p>
           <a
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Ver no mapa"
-            className="flex-shrink-0 p-2 rounded-full   transition-colors"
+            className="flex-shrink-0 rounded-full flex gap-3 w-full transition-colors"
           >
-            <MapPin className="h-5 w-5 text-[var(--loja-theme-color)]" />
+            <p className="underline">{fullAddress}</p>
+
+            <MapPin className="h-5 w-5 text-[var(--loja-theme-color)] mt-[2px]" />
           </a>
         </div>
       </section>
