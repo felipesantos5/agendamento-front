@@ -178,13 +178,148 @@ export function MyBookingsPage() {
                 const canBeCancelled =
                   booking.status === "booked" || booking.status === "confirmed";
                 return (
-                  <Link
+                  <Card
                     key={booking._id}
-                    to={`/${booking.barbershop.slug}`}
-                    className="block group"
-                    style={{ textDecoration: "none" }}
+                    className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0 group-hover:ring-2 group-hover:ring-blue-200 cursor-pointer"
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest("button")) return;
+                      navigate(`/${booking.barbershop.slug}`);
+                    }}
                   >
-                    <Card className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0 group-hover:ring-2 group-hover:ring-blue-200">
+                    <CardHeader className="p-4 sm:p-6">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={booking.barbershop.logoUrl}
+                            alt="logo barbearia"
+                            className="w-24"
+                          />
+                          <CardTitle className="text-xl md:text-2xl group-hover:underline">
+                            {booking.barbershop.name}
+                          </CardTitle>
+                        </div>
+                        <Badge className={`${statusInfo.className} border`}>
+                          {statusInfo.text}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
+                      <div className="flex items-center gap-3">
+                        <Scissors className="h-5 w-5 text-muted-foreground" />
+                        <span className="font-semibold">
+                          {booking.service.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                        <span>
+                          com <strong>{booking.barber.name}</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                        <span>
+                          {format(
+                            new Date(booking.time),
+                            "EEEE, dd 'de' MMMM",
+                            { locale: ptBR }
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-5 w-5 text-muted-foreground" />
+                        <span>
+                          às{" "}
+                          <strong>
+                            {format(new Date(booking.time), "HH:mm")}h
+                          </strong>
+                        </span>
+                      </div>
+                    </CardContent>
+                    {canBeCancelled && (
+                      <CardFooter className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              className="w-full sm:w-auto"
+                            >
+                              Cancelar Agendamento
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Você tem certeza?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação irá cancelar o seu agendamento para o
+                                serviço de{" "}
+                                <strong>{booking.service.name}</strong> no dia{" "}
+                                <strong>
+                                  {format(
+                                    new Date(booking.time),
+                                    "dd/MM/yyyy 'às' HH:mm",
+                                    { locale: ptBR }
+                                  )}
+                                </strong>
+                                .
+                                <br />
+                                <br />
+                                Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>
+                                Manter Agendamento
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleCancelBooking(booking)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
+                              >
+                                Sim, Cancelar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </CardFooter>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-10 px-4 border-2 border-dashed rounded-lg">
+              <Home className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-semibold">
+                Nenhum agendamento futuro
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Que tal marcar um novo horário?
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* --- SEÇÃO DE HISTÓRICO COM NOVO CARD --- */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
+            Histórico
+          </h2>
+          {pastBookings.length > 0 ? (
+            <>
+              <div className="space-y-4">
+                {paginatedPastBookings.map((booking) => {
+                  const statusInfo = getStatusInfo(booking.status, true);
+                  return (
+                    <Card
+                      key={booking._id}
+                      className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0 group-hover:ring-2 group-hover:ring-blue-200 cursor-pointer"
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest("button")) return;
+                        navigate(`/${booking.barbershop.slug}`);
+                      }}
+                    >
                       <CardHeader className="p-4 sm:p-6">
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex items-center gap-2">
@@ -235,143 +370,7 @@ export function MyBookingsPage() {
                           </span>
                         </div>
                       </CardContent>
-                      {canBeCancelled && (
-                        <CardFooter className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="destructive"
-                                className="w-full sm:w-auto"
-                                onClick={(e) => e.preventDefault()}
-                              >
-                                Cancelar Agendamento
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Você tem certeza?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta ação irá cancelar o seu agendamento para
-                                  o serviço de{" "}
-                                  <strong>{booking.service.name}</strong> no dia{" "}
-                                  <strong>
-                                    {format(
-                                      new Date(booking.time),
-                                      "dd/MM/yyyy 'às' HH:mm",
-                                      { locale: ptBR }
-                                    )}
-                                  </strong>
-                                  .
-                                  <br />
-                                  <br />
-                                  Esta ação não pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>
-                                  Manter Agendamento
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleCancelBooking(booking)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
-                                >
-                                  Sim, Cancelar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </CardFooter>
-                      )}
                     </Card>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-10 px-4 border-2 border-dashed rounded-lg">
-              <Home className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-semibold">
-                Nenhum agendamento futuro
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Que tal marcar um novo horário?
-              </p>
-            </div>
-          )}
-        </section>
-
-        {/* --- SEÇÃO DE HISTÓRICO COM NOVO CARD --- */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
-            Histórico
-          </h2>
-          {pastBookings.length > 0 ? (
-            <>
-              <div className="space-y-4">
-                {paginatedPastBookings.map((booking) => {
-                  const statusInfo = getStatusInfo(booking.status, true);
-                  return (
-                    <Link
-                      key={booking._id}
-                      to={`/${booking.barbershop.slug}`}
-                      className="block group"
-                      style={{ textDecoration: "none" }}
-                    >
-                      <Card className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0 group-hover:ring-2 group-hover:ring-blue-200">
-                        <CardHeader className="p-4 sm:p-6">
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={booking.barbershop.logoUrl}
-                                alt="logo barbearia"
-                                className="w-24"
-                              />
-                              <CardTitle className="text-xl md:text-2xl group-hover:underline">
-                                {booking.barbershop.name}
-                              </CardTitle>
-                            </div>
-                            <Badge className={`${statusInfo.className} border`}>
-                              {statusInfo.text}
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
-                          <div className="flex items-center gap-3">
-                            <Scissors className="h-5 w-5 text-muted-foreground" />
-                            <span className="font-semibold">
-                              {booking.service.name}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <User className="h-5 w-5 text-muted-foreground" />
-                            <span>
-                              com <strong>{booking.barber.name}</strong>
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Calendar className="h-5 w-5 text-muted-foreground" />
-                            <span>
-                              {format(
-                                new Date(booking.time),
-                                "EEEE, dd 'de' MMMM",
-                                { locale: ptBR }
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Clock className="h-5 w-5 text-muted-foreground" />
-                            <span>
-                              às{" "}
-                              <strong>
-                                {format(new Date(booking.time), "HH:mm")}h
-                              </strong>
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
                   );
                 })}
               </div>
