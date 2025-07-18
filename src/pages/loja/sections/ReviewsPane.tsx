@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Star, Loader2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 // Tipagem para uma avaliação recebida da API
 interface Review {
@@ -25,6 +26,13 @@ interface Review {
   customer: { name: string };
   createdAt: string;
 }
+
+const sectionAnimation = {
+  initial: { opacity: 0, x: 50 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -50 },
+  transition: { duration: 0.3, ease: "easeInOut" },
+};
 
 // Componente para renderizar as estrelas de forma visual
 const StarRating = ({
@@ -120,81 +128,93 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-8">
-      <div className="space-y-4">
-        {reviews.map((review) => (
-          <>
-            {review.customer?.name && (
-              <Card key={review._id} className="gap-2 py-3">
-                <CardHeader className="gap-0 px-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">
-                      {review.customer?.name}
-                    </span>
-                    <StarRating rating={review.rating} />
-                  </div>
-                  <CardDescription>
-                    {new Date(review.createdAt).toLocaleDateString("pt-BR")}
-                  </CardDescription>
-                </CardHeader>
-                {review.comment && (
-                  <CardContent className="px-3">
-                    <p className="text-muted-foreground italic">
-                      "{review.comment}"
-                    </p>
-                  </CardContent>
-                )}
-              </Card>
-            )}
-          </>
-        ))}
-      </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="services" // Chave única para o AnimatePresence identificar o elemento
+        initial={sectionAnimation.initial}
+        animate={sectionAnimation.animate}
+        exit={sectionAnimation.exit}
+        className="p-4 sm:p-6 space-y-8"
+      >
+        <div className="space-y-4">
+          {reviews.map((review) => (
+            <>
+              {review.customer?.name && (
+                <Card key={review._id} className="gap-2 py-3">
+                  <CardHeader className="gap-0 px-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">
+                        {review.customer?.name}
+                      </span>
+                      <StarRating rating={review.rating} />
+                    </div>
+                    <CardDescription>
+                      {new Date(review.createdAt).toLocaleDateString("pt-BR")}
+                    </CardDescription>
+                  </CardHeader>
+                  {review.comment && (
+                    <CardContent className="px-3">
+                      <p className="text-muted-foreground italic">
+                        "{review.comment}"
+                      </p>
+                    </CardContent>
+                  )}
+                </Card>
+              )}
+            </>
+          ))}
+        </div>
 
-      {/* Formulário para Nova Avaliação (só para usuários logados) */}
-      {isAuthenticated ? (
-        <div>
-          <CardTitle className="mb-4">Deixe sua avaliação</CardTitle>
+        {/* Formulário para Nova Avaliação (só para usuários logados) */}
+        {isAuthenticated ? (
           <div>
-            <form onSubmit={handleSubmitReview} className="space-y-4">
-              <div className="flex flex-col">
-                <StarRating
-                  rating={myRating}
-                  setRating={setMyRating}
-                  interactive
-                />
-              </div>
-              <div>
-                <Label htmlFor="comment">Seu comentário (opcional)</Label>
-                <Textarea
-                  id="comment"
-                  value={myComment}
-                  onChange={(e) => setMyComment(e.target.value)}
-                  placeholder="Conte como foi sua experiência..."
-                  className="mt-1"
-                />
-              </div>
-              <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Enviar Avaliação
-              </Button>
-            </form>
+            <CardTitle className="mb-4">Deixe sua avaliação</CardTitle>
+            <div>
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div className="flex flex-col">
+                  <StarRating
+                    rating={myRating}
+                    setRating={setMyRating}
+                    interactive
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="comment">Seu comentário (opcional)</Label>
+                  <Textarea
+                    id="comment"
+                    value={myComment}
+                    onChange={(e) => setMyComment(e.target.value)}
+                    placeholder="Conte como foi sua experiência..."
+                    className="mt-1"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Enviar Avaliação
+                </Button>
+              </form>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="text-center p-4 border-2 border-dashed rounded-lg">
-          <p className="text-muted-foreground">
-            <Link
-              to="/entrar"
-              className="font-bold text-[var(--loja-theme-color)] underline"
-            >
-              Faça seu login
-            </Link>{" "}
-            para deixar uma avaliação.
-          </p>
-        </div>
-      )}
-    </div>
+        ) : (
+          <div className="text-center p-4 border-2 border-dashed rounded-lg">
+            <p className="text-muted-foreground">
+              <Link
+                to="/entrar"
+                className="font-bold text-[var(--loja-theme-color)] underline"
+              >
+                Faça seu login
+              </Link>{" "}
+              para deixar uma avaliação.
+            </p>
+          </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
