@@ -30,13 +30,20 @@ interface PersonalInfoProps {
     barber?: string; // ID do barbeiro (anteriormente attendant)
     [key: string]: string | undefined; // Permitir outros campos
   };
-  updateFormData: (data: Partial<{ name: string; email: string; phone: string }>) => void;
+  updateFormData: (
+    data: Partial<{ name: string; email: string; phone: string }>
+  ) => void;
   // Props opcionais para exibir os nomes no resumo, se disponíveis
   serviceNameDisplay?: string;
   barberNameDisplay?: string;
 }
 
-export default function PersonalInfo({ formData, updateFormData, serviceNameDisplay, barberNameDisplay }: PersonalInfoProps) {
+export default function PersonalInfo({
+  formData,
+  updateFormData,
+  serviceNameDisplay,
+  barberNameDisplay,
+}: PersonalInfoProps) {
   const [isPhoneValid, setIsPhoneValid] = useState(true);
   const [phoneErrorMessage, setPhoneErrorMessage] = useState("");
 
@@ -90,14 +97,20 @@ export default function PersonalInfo({ formData, updateFormData, serviceNameDisp
         // transition={sectionAnimation.transition}
       >
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900 text-center">Dados Pessoais</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center">
+            Dados Pessoais
+          </h2>
           {/* <p className="mt-1 text-sm text-gray-500">Por favor, informe seus dados de contato.</p> */}
         </div>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Nome Completo <span className="text-[var(--loja-theme-color)]">*</span>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Nome Completo{" "}
+              <span className="text-[var(--loja-theme-color)]">*</span>
             </label>
             <input
               type="text"
@@ -128,8 +141,12 @@ export default function PersonalInfo({ formData, updateFormData, serviceNameDisp
         </div>*/}
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-              Celular (WhatsApp) <span className="text-[var(--loja-theme-color)]">*</span>
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Celular (WhatsApp){" "}
+              <span className="text-[var(--loja-theme-color)]">*</span>
             </label>
             <input
               type="tel"
@@ -145,32 +162,43 @@ export default function PersonalInfo({ formData, updateFormData, serviceNameDisp
               placeholder="(XX) XXXXX-XXXX"
               required
               maxLength={15} // Tamanho da string formatada (XX) XXXXX-XXXX
+              minLength={15}
             />
-            {!isPhoneValid && formData.phone.length > 0 && <p className="mt-1 text-xs text-red-600">{phoneErrorMessage}</p>}
+            {!isPhoneValid && formData.phone.length > 0 && (
+              <p className="mt-1 text-xs text-red-600">{phoneErrorMessage}</p>
+            )}
           </div>
         </div>
 
         <div className="rounded-md bg-gray-100 p-4">
-          <h3 className="text-sm font-semibold text-gray-800">Resumo do Agendamento</h3>
+          <h3 className="text-sm font-semibold text-gray-800">
+            Resumo do Agendamento
+          </h3>
           <div className="mt-2 space-y-1 text-sm text-gray-700">
             {formData.service && (
               <div className="flex justify-between">
                 <span>Serviço:</span>
-                <span className="font-medium">{serviceNameDisplay || `ID: ${formData.service}`}</span>
+                <span className="font-medium">
+                  {serviceNameDisplay || `ID: ${formData.service}`}
+                </span>
               </div>
             )}
 
             {formData.barber && ( // Mudado de formData.attendant para formData.barber
               <div className="flex justify-between">
                 <span>Profissional:</span>
-                <span className="font-medium">{barberNameDisplay || `ID: ${formData.barber}`}</span>
+                <span className="font-medium">
+                  {barberNameDisplay || `ID: ${formData.barber}`}
+                </span>
               </div>
             )}
 
             {formData.date && (
               <div className="flex justify-between">
                 <span>Data:</span>
-                <span className="font-medium capitalize">{formatDateForDisplay(formData.date)}</span>
+                <span className="font-medium capitalize">
+                  {formatDateForDisplay(formData.date)}
+                </span>
               </div>
             )}
 
