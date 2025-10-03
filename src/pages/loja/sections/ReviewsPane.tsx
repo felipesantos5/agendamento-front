@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, CheckCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Tipagem para uma avaliação recebida da API
@@ -23,7 +23,7 @@ interface Review {
   _id: string;
   rating: number;
   comment?: string;
-  customer: { name: string };
+  customer: { name: string; _id: string };
   createdAt: string;
 }
 
@@ -68,10 +68,11 @@ interface ReviewsPaneProps {
 }
 
 export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
-  const { isAuthenticated } = useCustomerAuth(); // Verifica se o cliente está logado
+  const { isAuthenticated, customer } = useCustomerAuth(); // ✅ Adicionar customer para pegar o ID
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasUserReviewed, setHasUserReviewed] = useState(false); // ✅ Novo estado
 
   // Estados para o formulário de nova avaliação
   const [myRating, setMyRating] = useState(5);
@@ -86,6 +87,14 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
         `api/barbershops/${barbershopId}/reviews`
       );
       setReviews(response.data);
+
+      // ✅ Verificar se o usuário logado já fez uma avaliação
+      if (isAuthenticated && customer?._id) {
+        const userReview = response.data.find(
+          (review: Review) => review.customer?._id === customer._id
+        );
+        setHasUserReviewed(!!userReview);
+      }
     } catch (error) {
       toast.error("Erro ao buscar avaliações.");
     } finally {
@@ -95,13 +104,12 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
 
   useEffect(() => {
     fetchReviews();
-  }, [barbershopId]);
+  }, [barbershopId, isAuthenticated, customer]); // ✅ Adicionar dependências
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Faz a chamada POST para a rota que ajustamos
       await apiClient.post(`api/barbershops/${barbershopId}/reviews`, {
         rating: myRating,
         comment: myComment,
@@ -111,6 +119,7 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
       // Limpa o formulário e recarrega a lista
       setMyComment("");
       setMyRating(5);
+      setHasUserReviewed(true); // ✅ Marca que o usuário já avaliou
       fetchReviews();
     } catch (error) {
       toast.error("Ocorreu um erro ao enviar sua avaliação.");
@@ -130,7 +139,7 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key="services" // Chave única para o AnimatePresence identificar o elemento
+        key="services"
         initial={sectionAnimation.initial}
         animate={sectionAnimation.animate}
         exit={sectionAnimation.exit}
@@ -165,42 +174,58 @@ export function ReviewsPane({ barbershopId }: ReviewsPaneProps) {
           ))}
         </div>
 
-        {/* Formulário para Nova Avaliação (só para usuários logados) */}
+        {/* ✅ LÓGICA ATUALIZADA PARA O FORMULÁRIO */}
         {isAuthenticated ? (
-          <div>
-            <CardTitle className="mb-4">Deixe sua avaliação</CardTitle>
-            <div>
-              <form onSubmit={handleSubmitReview} className="space-y-4">
-                <div className="flex flex-col">
-                  <StarRating
-                    rating={myRating}
-                    setRating={setMyRating}
-                    interactive
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="comment">Seu comentário (opcional)</Label>
-                  <Textarea
-                    id="comment"
-                    value={myComment}
-                    onChange={(e) => setMyComment(e.target.value)}
-                    placeholder="Conte como foi sua experiência..."
-                    className="mt-1"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full"
-                >
-                  {isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Enviar Avaliação
-                </Button>
-              </form>
+          hasUserReviewed ? (
+            // ✅ Mensagem quando já avaliou
+            <div className="text-center p-6 border-2 border-dashed rounded-lg bg-green-50 border-green-200">
+              <div className="flex flex-col items-center space-y-2">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+                <p className="text-green-800 font-medium">
+                  Obrigado pela sua avaliação!
+                </p>
+                <p className="text-green-600 text-sm">
+                  Você já enviou uma avaliação para barbearia.
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            // ✅ Formulário quando ainda não avaliou
+            <div>
+              <CardTitle className="mb-4">Deixe sua avaliação</CardTitle>
+              <div>
+                <form onSubmit={handleSubmitReview} className="space-y-4">
+                  <div className="flex flex-col">
+                    <StarRating
+                      rating={myRating}
+                      setRating={setMyRating}
+                      interactive
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="comment">Seu comentário (opcional)</Label>
+                    <Textarea
+                      id="comment"
+                      value={myComment}
+                      onChange={(e) => setMyComment(e.target.value)}
+                      placeholder="Conte como foi sua experiência..."
+                      className="mt-1"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full"
+                  >
+                    {isSubmitting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Enviar Avaliação
+                  </Button>
+                </form>
+              </div>
+            </div>
+          )
         ) : (
           <div className="text-center p-4 border-2 border-dashed rounded-lg">
             <p className="text-muted-foreground">
