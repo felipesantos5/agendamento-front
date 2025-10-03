@@ -43,13 +43,11 @@ export function BookingPane({
   useEffect(() => {
     // Verifica se pode avançar do Passo 1 (Serviço e Barbeiro) para o Passo 2 (Data e Hora)
     if (currentStep === 1 && formData.service && formData.barber) {
-      console.log("Avançando para o passo 2...");
       setCurrentStep(2);
       window.scrollTo({ top: 0, behavior: "smooth" }); // Rola para o topo
     }
     // Verifica se pode avançar do Passo 2 (Data e Hora) para o Passo 3 (Dados Pessoais)
     else if (currentStep === 2 && formData.date && formData.time) {
-      console.log("Avançando para o passo 3...");
       setCurrentStep(3);
       window.scrollTo({ top: 0, behavior: "smooth" }); // Rola para o topo
     }

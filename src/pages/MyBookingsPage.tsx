@@ -66,8 +66,6 @@ export function MyBookingsPage() {
     }
   };
 
-  console.log(`bookings`, bookings);
-
   useEffect(() => {
     fetchBookings();
   }, []);
