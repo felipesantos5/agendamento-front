@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 
 // Tipos para as abas
-type TabId = "agendamento" | "avaliacoes" | "planos";
+type TabId = "agendamento" | "avaliacoes" | "planos" | "products";
 
 export type Tab = {
   id: string;

@@ -38,22 +38,16 @@ interface DateTimeSelectionProps {
   selectedServiceId: string | undefined;
 }
 
-export default function DateTimeSelection({
-  formData,
-  updateFormData,
-  barbershopId,
-  selectedBarber,
-  selectedServiceId,
-}: DateTimeSelectionProps) {
+export default function DateTimeSelection({ formData, updateFormData, barbershopId, selectedBarber, selectedServiceId }: DateTimeSelectionProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [holidayMessage, setHolidayMessage] = useState<string | null>(null);
   const [scrollIntent, setScrollIntent] = useState(false);
+  const [noWorkDays, setNoWorkDays] = useState<Set<string>>(new Set()); // Novo estado
 
-  const [fullyBookedDays, setFullyBookedDays] = useState<Set<string>>(
-    new Set()
-  );
+  const [fullyBookedDays, setFullyBookedDays] = useState<Set<string>>(new Set());
+  const [unavailableDays, setUnavailableDays] = useState<Set<string>>(new Set());
 
   const { isHoliday, getHolidayName } = useHolidays();
 
@@ -87,12 +81,9 @@ export default function DateTimeSelection({
         setHolidayMessage(null);
 
         try {
-          const response = await axios.get(
-            `${API_BASE_URL}/barbershops/${barbershopId}/barbers/${selectedBarber}/free-slots`,
-            {
-              params: { date: formData.date, serviceId: selectedServiceId },
-            }
-          );
+          const response = await axios.get(`${API_BASE_URL}/barbershops/${barbershopId}/barbers/${selectedBarber}/free-slots`, {
+            params: { date: formData.date, serviceId: selectedServiceId },
+          });
 
           const data: ApiResponse = response.data;
 
@@ -116,24 +107,22 @@ export default function DateTimeSelection({
   }, [formData.date, selectedBarber, barbershopId, selectedServiceId]);
 
   useEffect(() => {
-    // Só busca se tivermos as informações necessárias
     if (!barbershopId || !selectedBarber || !selectedServiceId) {
       return;
     }
 
     const fetchMonthlyAvailability = async () => {
       try {
-        const response = await apiClient.get(
-          `/barbershops/${barbershopId}/bookings/${selectedBarber}/monthly-availability`,
-          {
-            params: {
-              year: currentMonth.getFullYear(),
-              month: currentMonth.getMonth() + 1,
-              serviceId: selectedServiceId,
-            },
-          }
-        );
-        setFullyBookedDays(new Set(response.data.unavailableDays));
+        const response = await apiClient.get(`/barbershops/${barbershopId}/bookings/${selectedBarber}/monthly-availability`, {
+          params: {
+            year: currentMonth.getFullYear(),
+            month: currentMonth.getMonth() + 1,
+            serviceId: selectedServiceId,
+          },
+        });
+
+        // Usa diretamente a lista de dias indisponíveis do backend
+        setUnavailableDays(new Set(response.data.unavailableDays));
       } catch (error) {
         console.error("Erro ao buscar disponibilidade do mês", error);
         toast.error("Não foi possível verificar a disponibilidade do mês.");
@@ -141,15 +130,7 @@ export default function DateTimeSelection({
     };
 
     fetchMonthlyAvailability();
-    // Depende dessas variáveis para refazer a busca quando o mês, barbeiro ou serviço mudar
   }, [currentMonth, selectedBarber, selectedServiceId, barbershopId]);
-
-  const isDayFullyBooked = (day: number) => {
-    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
-    return fullyBookedDays.has(dateString);
-  };
 
   useEffect(() => {
     // A condição para rolar continua a mesma: intenção do usuário + dados carregados
@@ -158,8 +139,7 @@ export default function DateTimeSelection({
         const targetElement = timeSlotsRef.current;
 
         if (targetElement) {
-          const elementPosition =
-            targetElement.getBoundingClientRect().top + window.scrollY;
+          const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
 
           const offset = 390;
 
@@ -176,9 +156,7 @@ export default function DateTimeSelection({
 
   const filteredAndVisibleSlots = useMemo(() => {
     const today = new Date();
-    const todayString = `${today.getFullYear()}-${String(
-      today.getMonth() + 1
-    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (formData.date !== todayString) {
       return timeSlots;
@@ -195,29 +173,14 @@ export default function DateTimeSelection({
     });
   }, [timeSlots, formData.date]);
 
-  const getDaysInMonth = (year: number, month: number) =>
-    new Date(year, month + 1, 0).getDate();
-  const getFirstDayOfMonth = (year: number, month: number) =>
-    new Date(year, month, 1).getDay();
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   const daysInMonth = getDaysInMonth(year, month);
   const firstDayOfMonth = getFirstDayOfMonth(year, month);
-  const monthNames = [
-    "Janeiro",
-    "Fevereiro",
-    "Março",
-    "Abril",
-    "Maio",
-    "Junho",
-    "Julho",
-    "Agosto",
-    "Setembro",
-    "Outubro",
-    "Novembro",
-    "Dezembro",
-  ];
+  const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   const days = Array(firstDayOfMonth)
     .fill(null)
     .concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
@@ -226,10 +189,7 @@ export default function DateTimeSelection({
   const handleNextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
 
   const handleDateSelect = (day: number) => {
-    const selectedDate = `${year}-${String(month + 1).padStart(
-      2,
-      "0"
-    )}-${String(day).padStart(2, "0")}`;
+    const selectedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
     // if (isHoliday(selectedDate)) {
     //   const holidayName = getHolidayName(selectedDate);
@@ -244,18 +204,30 @@ export default function DateTimeSelection({
   const isDateInPast = (day: number) => {
     const today = new Date();
     const selectedDate = new Date(year, month, day);
-    return (
-      selectedDate <
-      new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    );
+    return selectedDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
   };
 
   const isDayHoliday = (day: number) => {
-    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     return isHoliday(dateString);
   };
+
+  const isDayFullyBooked = (day: number) => {
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return fullyBookedDays.has(dateString);
+  };
+
+  const isDayNoWork = (day: number) => {
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return noWorkDays.has(dateString);
+  };
+
+  const isDayUnavailable = (day: number) => {
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return unavailableDays.has(dateString);
+  };
+
+  console.log("unavailableDays", unavailableDays);
 
   return (
     <AnimatePresence mode="wait">
@@ -264,12 +236,9 @@ export default function DateTimeSelection({
         initial={sectionAnimation.initial}
         animate={sectionAnimation.animate}
         exit={sectionAnimation.exit}
-        // transition={sectionAnimation.transition}
       >
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900 text-center">
-            Escolha a Data e Hora
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center">Escolha a Data e Hora</h2>
         </div>
 
         <div className="lg:flex gap-8 md:min-h-[450px]">
@@ -280,21 +249,13 @@ export default function DateTimeSelection({
                 Selecione a Data
               </label>
               <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={handlePrevMonth}
-                  className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
-                >
+                <button type="button" onClick={handlePrevMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
                   <ChevronLeft className="h-7 w-7" />
                 </button>
                 <span className="text-base font-medium">
                   {monthNames[month]} {year}
                 </span>
-                <button
-                  type="button"
-                  onClick={handleNextMonth}
-                  className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
-                >
+                <button type="button" onClick={handleNextMonth} className="rounded-md p-1 text-gray-500 hover:bg-gray-100 cursor-pointer">
                   <ChevronRight className="h-7 w-7" />
                 </button>
               </div>
@@ -302,76 +263,54 @@ export default function DateTimeSelection({
 
             <div className="overflow-hidden rounded-lg border border-gray-200">
               <div className="grid grid-cols-7 bg-gray-50 text-center">
-                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map(
-                  (day) => (
-                    <div
-                      key={day}
-                      className="py-2 text-xs font-medium text-gray-500"
-                    >
-                      {day}
-                    </div>
-                  )
-                )}
+                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
+                  <div key={day} className="py-2 text-xs font-medium text-gray-500">
+                    {day}
+                  </div>
+                ))}
               </div>
               <div className="grid grid-cols-7 gap-px bg-gray-200">
                 {days.map((day, index) => (
-                  <div
-                    key={index}
-                    className={`bg-white p-2 ${
-                      !day ? "cursor-default" : "cursor-pointer"
-                    }`}
-                  >
+                  <div key={index} className={`bg-white p-2 ${!day ? "cursor-default" : "cursor-pointer"}`}>
                     {day && (
                       <button
                         type="button"
                         disabled={
-                          isDateInPast(day) ||
-                          isDayHoliday(day) ||
-                          isDayFullyBooked(day)
+                          isDateInPast(day) || isDayHoliday(day) || isDayUnavailable(day) // Condição única e simples
                         }
                         onClick={() => handleDateSelect(day)}
                         className={`
-        mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm relative transition-colors
-        ${
-          // 1. Estilo para dias que já passaram: Riscado e cinza
-          isDayFullyBooked(day)
-            ? "text-gray-400 cursor-not-allowed line-through"
-            : isDateInPast(day)
-            ? "text-gray-400 cursor-not-allowed line-through decoration-2"
-            : // 2. Estilo para feriados: Fundo vermelho claro e texto vermelho
-            isDayHoliday(day)
-            ? "bg-red-100 text-red-500 font-semibold cursor-not-allowed"
-            : // 3. Estilo para o dia atualmente selecionado
-            formData.date ===
-              `${year}-${String(month + 1).padStart(2, "0")}-${String(
-                day
-              ).padStart(2, "0")}`
-            ? "bg-[var(--loja-theme-color)] text-white"
-            : // 4. Estilo padrão para dias disponíveis
-              "hover:bg-[var(--loja-theme-color)]/30 cursor-pointer"
-        }
-    `}
+                          mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm relative transition-colors
+                          ${
+                            // 1. Dias no passado: Riscado e cinza
+                            isDateInPast(day)
+                              ? "text-gray-400 cursor-not-allowed line-through decoration-2"
+                              : // 2. Feriados: Fundo vermelho claro
+                              isDayHoliday(day)
+                              ? "bg-red-100 text-red-500 font-semibold cursor-not-allowed"
+                              : // 3. Dias indisponíveis (sem horário): Cinza riscado
+                              isDayUnavailable(day)
+                              ? "text-gray-400 cursor-not-allowed line-through"
+                              : // 4. Dia selecionado
+                              formData.date === `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+                              ? "bg-[var(--loja-theme-color)] text-white"
+                              : // 5. Dias disponíveis
+                                "hover:bg-[var(--loja-theme-color)]/30 cursor-pointer"
+                          }
+                        `}
                         title={
-                          isDayFullyBooked(day)
-                            ? "Horários esgotados para este dia"
-                            : isDateInPast(day)
+                          isDateInPast(day)
                             ? "Data indisponível"
                             : isDayHoliday(day)
-                            ? `Feriado: ${getHolidayName(
-                                `${year}-${String(month + 1).padStart(
-                                  2,
-                                  "0"
-                                )}-${String(day).padStart(2, "0")}`
-                              )}`
+                            ? `Feriado: ${getHolidayName(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`)}`
+                            : isDayUnavailable(day)
+                            ? "Nenhum horário disponível"
                             : undefined
                         }
                       >
                         {day}
 
-                        {/* Mantemos o ponto vermelho como um indicador extra apenas para feriados */}
-                        {isDayHoliday(day) && !isDateInPast(day) && (
-                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
-                        )}
+                        {isDayHoliday(day) && !isDateInPast(day) && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
                       </button>
                     )}
                   </div>
@@ -386,33 +325,17 @@ export default function DateTimeSelection({
               Selecione o Horário
             </label>
 
-            {!selectedBarber && (
-              <p className="text-xs text-[var(--loja-theme-color)]">
-                Por favor, selecione um barbeiro na etapa anterior.
-              </p>
-            )}
-            {!formData.date && selectedBarber && (
-              <p className="text-sm text-gray-500 md:text-base">
-                Por favor, selecione uma data primeiro.
-              </p>
-            )}
+            {!selectedBarber && <p className="text-xs text-[var(--loja-theme-color)]">Por favor, selecione um barbeiro na etapa anterior.</p>}
+            {!formData.date && selectedBarber && <p className="text-sm text-gray-500 md:text-base">Por favor, selecione uma data primeiro.</p>}
 
             {holidayMessage && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-700 font-medium">
-                  🎉 {holidayMessage}
-                </p>
-                <p className="text-xs text-red-600 mt-1">
-                  Escolha outra data para continuar com o agendamento.
-                </p>
+                <p className="text-sm text-red-700 font-medium">🎉 {holidayMessage}</p>
+                <p className="text-xs text-red-600 mt-1">Escolha outra data para continuar com o agendamento.</p>
               </div>
             )}
 
-            <div
-              className={`flex min-h-[180px] items-baseline justify-center w-full ${
-                filteredAndVisibleSlots.length === 0 && "min-h-auto"
-              }`}
-            >
+            <div className={`flex min-h-[180px] items-baseline justify-center w-full ${filteredAndVisibleSlots.length === 0 && "min-h-auto"}`}>
               {loadingTimes ? (
                 <Spinner />
               ) : (
@@ -442,11 +365,7 @@ export default function DateTimeSelection({
                         </button>
                       ))
                     : formData.date &&
-                      !holidayMessage && (
-                        <p className="col-span-full text-sm text-gray-500">
-                          Nenhum horário disponível para este dia.
-                        </p>
-                      )}
+                      !holidayMessage && <p className="col-span-full text-sm text-gray-500">Nenhum horário disponível para este dia.</p>}
                 </motion.div>
               )}
             </div>
