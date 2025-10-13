@@ -272,12 +272,12 @@ export function MyBookingsPage() {
                         </span>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-4 gap-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t">
+                    <CardFooter className="p-4 gap-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t flex-col md:flex-row">
                       {showPayButton && (
                         <Button
                           onClick={() => handlePayNow(booking)}
                           disabled={isCreatingPayment === booking._id}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto"
                         >
                           {isCreatingPayment === booking._id ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -294,7 +294,7 @@ export function MyBookingsPage() {
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="destructive"
-                              className="w-full sm:w-auto"
+                              className="w-full md:w-auto"
                             >
                               Cancelar Agendamento
                             </Button>
