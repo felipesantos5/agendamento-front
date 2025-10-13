@@ -4,13 +4,21 @@ import { BookingSuccessPage } from "./components/BookingSuccessPage";
 import { CustomerLoginPage } from "./pages/CustomerLoginPage";
 import { ProtectedRouteCustomer } from "./components/ProtectedRouteCustomer.tsx";
 import { MyBookingsPage } from "./pages/MyBookingsPage.tsx";
+import { PaymentSucessPage } from "./pages/PayedSucess.tsx";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/:slug" element={<Loja />} />
-        <Route path="/:slug/agendamento-sucesso" element={<BookingSuccessPage />} />
+        <Route
+          path="/:slug/agendamento-sucesso"
+          element={<BookingSuccessPage />}
+        />
+        <Route
+          path="/:slug/pagamento-sucesso"
+          element={<PaymentSucessPage />}
+        />
 
         <Route path="/entrar" element={<CustomerLoginPage />} />
 

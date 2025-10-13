@@ -27,6 +27,7 @@ import { ptBR } from "date-fns/locale";
 import {
   Calendar,
   Clock,
+  CreditCard,
   Home,
   Loader2,
   LogOut,
@@ -38,11 +39,18 @@ import { useNavigate } from "react-router-dom";
 // Supondo uma tipagem para o agendamento populado
 interface PopulatedBooking {
   _id: string;
-  barbershop: { _id: string; name: string; slug: string; logoUrl: string };
+  barbershop: {
+    _id: string;
+    name: string;
+    slug: string;
+    logoUrl: string;
+    paymentsEnabled?: boolean; // Adicione este campo
+  };
   barber: { name: string };
   service: { name: string; price: number };
   time: string;
   status: "booked" | "confirmed" | "completed" | "canceled";
+  paymentStatus?: "approved" | "pending" | "rejected" | "cancelled" | null; // Adicione este campo
 }
 
 export function MyBookingsPage() {
@@ -50,6 +58,9 @@ export function MyBookingsPage() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<PopulatedBooking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingPayment, setIsCreatingPayment] = useState<string | null>(
+    null
+  );
 
   // Função para buscar os agendamentos
   const fetchBookings = async () => {
@@ -108,6 +119,26 @@ export function MyBookingsPage() {
     logout();
     navigate("/entrar");
     toast.info("Você foi desconectado.");
+  };
+
+  const handlePayNow = async (booking: PopulatedBooking) => {
+    if (!booking.barbershop._id || !booking._id) return;
+
+    setIsCreatingPayment(booking._id); // Ativa o loading para este botão específico
+    try {
+      const response = await apiClient.post(
+        `/barbershops/${booking.barbershop._id}/bookings/${booking._id}/create-payment`
+      );
+      const { payment_url } = response.data;
+      if (payment_url) {
+        window.location.href = payment_url;
+      } else {
+        throw new Error("URL de pagamento não recebida.");
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Falha ao iniciar pagamento.");
+      setIsCreatingPayment(null); // Desativa o loading em caso de erro
+    }
   };
 
   const getStatusInfo = (
@@ -173,8 +204,15 @@ export function MyBookingsPage() {
             <div className="space-y-6">
               {upcomingBookings.map((booking) => {
                 const statusInfo = getStatusInfo(booking.status);
+
                 const canBeCancelled =
                   booking.status === "booked" || booking.status === "confirmed";
+
+                const showPayButton =
+                  booking.barbershop.paymentsEnabled &&
+                  booking.paymentStatus !== "approved" &&
+                  booking.status !== "canceled";
+
                 return (
                   <Card
                     key={booking._id}
@@ -234,8 +272,24 @@ export function MyBookingsPage() {
                         </span>
                       </div>
                     </CardContent>
-                    {canBeCancelled && (
-                      <CardFooter className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t">
+                    <CardFooter className="p-4 gap-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t">
+                      {showPayButton && (
+                        <Button
+                          onClick={() => handlePayNow(booking)}
+                          disabled={isCreatingPayment === booking._id}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          {isCreatingPayment === booking._id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <CreditCard className="mr-2 h-4 w-4" />
+                          )}
+                          {isCreatingPayment === booking._id
+                            ? "Aguarde..."
+                            : "Pagar Agora"}
+                        </Button>
+                      )}
+                      {canBeCancelled && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -280,8 +334,8 @@ export function MyBookingsPage() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                      </CardFooter>
-                    )}
+                      )}
+                    </CardFooter>
                   </Card>
                 );
               })}

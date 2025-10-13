@@ -7,7 +7,7 @@ import { API_BASE_URL } from "@/config/BackendUrl";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Loader2 } from "lucide-react";
 import { PhoneFormat } from "@/helper/phoneFormater";
@@ -71,8 +71,32 @@ export function LoginForm({
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Impede o recarregamento da página
+    if (isLoading) return; // Impede submissões duplas
+
+    if (step === "enterPhone") {
+      handleRequestOtp();
+    } else {
+      handleVerifyOtp();
+    }
+  };
+
+  useEffect(() => {
+    if (otp.length === 6) {
+      handleVerifyOtp();
+    }
+    // A dependência 'handleVerifyOtp' pode causar re-renderizações se não for memoizada,
+    // mas para este caso, é seguro adicionar. Se usar `useCallback` na função, adicione-a.
+  }, [otp]);
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form
+      onSubmit={handleSubmit}
+      className={cn("flex flex-col gap-6", className)}
+      {...props}
+    >
       <div className="flex flex-col items-center gap-2 text-center mb-6">
         <h1 className="text-3xl font-bold">Entre na sua conta</h1>
       </div>
@@ -119,10 +143,10 @@ export function LoginForm({
           )}
         </div>
         <Button
-          type="button"
+          type="submit"
           className="w-full"
           disabled={isLoading}
-          onClick={step === "enterPhone" ? handleRequestOtp : handleVerifyOtp}
+          // onClick={step === "enterPhone" ? handleRequestOtp : handleVerifyOtp}
         >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {step === "enterPhone" ? "Enviar Código" : "Confirmar e Entrar"}
