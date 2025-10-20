@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import apiClient from "./../../../services/api";
 
 // Tipos
@@ -46,7 +43,8 @@ const UNITS: Record<string, string> = {
 
 // Componente do Card do Produto
 function ProductCard({ product }: { product: Product }) {
-  const getCategoryLabel = (category: string) => CATEGORIES.find((cat) => cat.value === category)?.label || category;
+  const getCategoryLabel = (category: string) =>
+    CATEGORIES.find((cat) => cat.value === category)?.label || category;
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300">
@@ -72,11 +70,19 @@ function ProductCard({ product }: { product: Product }) {
             {getCategoryLabel(product.category)}
           </Badge>
 
-          <h3 className="font-semibold text-lg leading-tight line-clamp-2">{product.name}</h3>
+          <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+            {product.name}
+          </h3>
 
-          {product.brand && <p className="text-sm text-gray-600">{product.brand}</p>}
+          {product.brand && (
+            <p className="text-sm text-gray-600">{product.brand}</p>
+          )}
 
-          {product.description && <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>}
+          {product.description && (
+            <p className="text-sm text-gray-500 line-clamp-2">
+              {product.description}
+            </p>
+          )}
 
           <div className="flex items-center justify-between pt-2">
             <div>
@@ -87,7 +93,9 @@ function ProductCard({ product }: { product: Product }) {
                   maximumFractionDigits: 2,
                 })}
               </span>
-              <span className="text-xs text-gray-500 block">por {UNITS[product.unit] || product.unit}</span>
+              <span className="text-xs text-gray-500 block">
+                por {UNITS[product.unit] || product.unit}
+              </span>
             </div>
           </div>
         </div>
@@ -116,8 +124,6 @@ export function CustomerProductsPage() {
     limit: 12,
   });
 
-  const [showFilters, setShowFilters] = useState(false);
-
   // Buscar produtos
   const fetchProducts = async () => {
     if (!slug) return;
@@ -130,10 +136,13 @@ export function CustomerProductsPage() {
         limit: filters.limit.toString(),
       });
 
-      if (filters.category !== "all") params.append("category", filters.category);
+      if (filters.category !== "all")
+        params.append("category", filters.category);
       if (filters.search) params.append("search", filters.search);
 
-      const response = await apiClient.get(`/api/barbershops/${slug}/products/store`);
+      const response = await apiClient.get(
+        `/api/barbershops/${slug}/products/store`
+      );
 
       setProducts(response.data.products);
       setPagination(response.data.pagination);
@@ -149,14 +158,6 @@ export function CustomerProductsPage() {
     fetchProducts();
   }, [slug, filters]);
 
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-      page: 1,
-    }));
-  };
-
   const handlePageChange = (page: number) => {
     setFilters((prev) => ({ ...prev, page }));
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -165,12 +166,6 @@ export function CustomerProductsPage() {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        {/* <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Nossos Produtos</h1>
-          <p className="text-gray-600">Conheça os produtos que utilizamos e vendemos</p>
-        </div> */}
-
-        {/* Grid de Produtos */}
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -184,15 +179,24 @@ export function CustomerProductsPage() {
         ) : (
           <div className="text-center py-20">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum produto encontrado</h3>
-            <p className="text-gray-600">Tente ajustar os filtros para encontrar o que procura</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Nenhum produto encontrado
+            </h3>
+            <p className="text-gray-600">
+              Tente ajustar os filtros para encontrar o que procura
+            </p>
           </div>
         )}
 
         {/* Paginação */}
         {pagination.pages > 1 && (
           <div className="flex justify-center items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => handlePageChange(pagination.current - 1)} disabled={pagination.current <= 1}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.current - 1)}
+              disabled={pagination.current <= 1}
+            >
               <ChevronLeft className="h-4 w-4" />
               Anterior
             </Button>
@@ -213,7 +217,9 @@ export function CustomerProductsPage() {
                 return (
                   <Button
                     key={page}
-                    variant={page === pagination.current ? "default" : "outline"}
+                    variant={
+                      page === pagination.current ? "default" : "outline"
+                    }
                     size="sm"
                     onClick={() => handlePageChange(page)}
                     className="w-10"
