@@ -15,12 +15,8 @@ export function CustomerLoginPage() {
         >
           ← Voltar
         </button>
-        <div className="flex justify-center gap-2 md:justify-start">
+        <div className="flex justify-center gap-2 lg:justify-start">
           <a href="#" className="flex items-center gap-2 font-medium">
-            {/* <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-              <Scissors className="size-4" />
-            </div>
-            BarbeariAgendamento */}
             <img
               src={logo}
               alt="logo barbeariAgendamento"

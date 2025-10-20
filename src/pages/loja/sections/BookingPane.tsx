@@ -16,7 +16,6 @@ interface BookingPaneProps {
   allBarbers: Barber[];
 }
 
-// Estado inicial do formulário para facilitar o reset
 const initialFormData = {
   service: "",
   barber: "",
@@ -34,12 +33,12 @@ export function BookingPane({
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
 
-  // Todos os estados que antes estavam em Loja.tsx agora vivem aqui
   const [formData, setFormData] = useState(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;
 
+  // ... (useEffect e outras funções permanecem iguais)
   useEffect(() => {
     // Verifica se pode avançar do Passo 1 (Serviço e Barbeiro) para o Passo 2 (Data e Hora)
     if (currentStep === 1 && formData.service && formData.barber) {
@@ -79,7 +78,17 @@ export function BookingPane({
     }
   };
 
-  // Lógica de submissão do formulário
+  // Encontra os nomes selecionados para exibir no resumo
+  const selectedServiceName = useMemo(
+    () => allServices.find((s) => s._id === formData.service)?.name,
+    [allServices, formData.service]
+  );
+  const selectedBarberName = useMemo(
+    () => allBarbers.find((b) => b._id === formData.barber)?.name,
+    [allBarbers, formData.barber]
+  );
+
+  // ALTERADO: Lógica de submissão do formulário
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -102,23 +111,33 @@ export function BookingPane({
     };
 
     try {
-      const response = await apiClient.post(
+      // 1. Cria o agendamento
+      const bookingResponse = await apiClient.post(
         `/barbershops/${barbershop._id}/bookings`,
         bookingPayload
       );
 
-      if (response.status === 201 && barbershop) {
+      // 2. Se o agendamento foi criado com sucesso, navega para a página de sucesso
+      if (bookingResponse.status === 201) {
+        const newBooking = bookingResponse.data;
+
+        // 3. Navega passando TODOS os dados necessários para a próxima página
         navigate(`/${slug}/agendamento-sucesso`, {
           replace: true,
           state: {
+            // Detalhes para exibição na tela
             bookingDetails: {
-              barbershopName: barbershop.name,
               customerName: name,
-              serviceName: selectedServiceName || "Serviço Indisponível",
-              barberName: selectedBarberName || "Profissional Indisponível",
+              serviceName: selectedServiceName,
+              barberName: selectedBarberName,
               date: date,
               time: time,
+              barbershopName: barbershop.name,
             },
+            // Dados para a funcionalidade de pagamento
+            newBookingId: newBooking._id, // << NOVO: ID do agendamento
+            barbershopId: barbershop._id, // << NOVO: ID da barbearia
+            paymentsEnabled: barbershop.paymentsEnabled, // << NOVO: Flag de pagamento
             barbershopSlug: barbershop.slug,
           },
         });
@@ -130,20 +149,21 @@ export function BookingPane({
     } finally {
       setIsSubmitting(false);
     }
+
+    // O finally foi movido para dentro do try/catch para não ser executado durante o redirecionamento
   };
 
-  // Encontra os nomes selecionados para exibir no resumo
-  const selectedServiceName = useMemo(
-    () => allServices.find((s) => s._id === formData.service)?.name,
-    [allServices, formData.service]
-  );
-  const selectedBarberName = useMemo(
-    () => allBarbers.find((b) => b._id === formData.barber)?.name,
-    [allBarbers, formData.barber]
-  );
+  // NOVO: Define o texto do botão com base na necessidade de pagamento
+  const submitButtonText = barbershop.paymentsEnabled
+    ? isSubmitting
+      ? "Gerando Pagamento..."
+      : "Pagar e Agendar"
+    : isSubmitting
+    ? "Agendando..."
+    : "Confirmar Agendamento";
 
   return (
-    <div className="p-4 pb-8md:p-6 lg:p-8 mt-1">
+    <div className="p-4 pb-8 md:p-6 lg:p-8 mt-1">
       <form onSubmit={handleSubmit} className="flex h-full flex-col">
         <div className="flex-grow">
           {currentStep === 1 && (
@@ -200,7 +220,8 @@ export function BookingPane({
               disabled={isSubmitting}
               className="bg-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/90"
             >
-              {isSubmitting ? "Agendando..." : "Confirmar Agendamento"}
+              {/* ALTERADO: Usa o texto dinâmico do botão */}
+              {submitButtonText}
               <Check className="ml-1 h-4 w-4" />
             </Button>
           )}

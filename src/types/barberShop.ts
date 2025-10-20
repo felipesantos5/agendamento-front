@@ -19,7 +19,7 @@ export interface WorkingHour {
 export interface Barbershop {
   _id: string;
   name: string;
-  description?: string
+  description?: string;
   themeColor?: string;
   slug: string;
   logoUrl?: string;
@@ -28,6 +28,7 @@ export interface Barbershop {
   contact?: string; // Mantendo o contact se ainda for usado
   address: Address;
   workingHours: WorkingHour[];
+  paymentsEnabled?: boolean;
 }
 
 export interface Service {
@@ -61,4 +62,5 @@ export interface BookingFormData {
   name: string;
   email: string;
   phone: string;
+  paymentStatus?: string;
 }
