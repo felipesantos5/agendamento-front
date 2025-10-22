@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom"; // Importar useLocation
 import apiClient from "@/services/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -25,60 +25,122 @@ const initialFormData = {
   phone: "",
 };
 
+// ***** NOVO: Interface para os dados de remarcação *****
+interface RescheduleState {
+  rescheduleData?: {
+    originalBookingId: string;
+    serviceId: string;
+    barberId: string;
+  };
+}
+// ****************************************************
+
 export function BookingPane({
   barbershop,
   allServices,
   allBarbers,
 }: BookingPaneProps) {
   const navigate = useNavigate();
+  const location = useLocation(); // Hook para acessar o state da navegação
   const { slug } = useParams<{ slug: string }>();
 
-  const [formData, setFormData] = useState(initialFormData);
-  const [currentStep, setCurrentStep] = useState(1);
+  // ***** NOVO: Tenta pegar os dados de remarcação do state *****
+  const rescheduleInfo = (location.state as RescheduleState)?.rescheduleData;
+  // **********************************************************
+
+  const [formData, setFormData] = useState(() => {
+    // Se houver dados de remarcação, inicializa o form com eles
+    if (rescheduleInfo) {
+      return {
+        ...initialFormData,
+        service: rescheduleInfo.serviceId,
+        barber: rescheduleInfo.barberId,
+      };
+    }
+    return initialFormData; // Senão, começa vazio
+  });
+
+  // ***** NOVO: Define o passo inicial com base nos dados de remarcação *****
+  const [currentStep, setCurrentStep] = useState(() => {
+    // Se está remarcando (já tem serviço e barbeiro), começa no passo 2
+    return rescheduleInfo ? 2 : 1;
+  });
+  // ********************************************************************
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;
 
-  // ... (useEffect e outras funções permanecem iguais)
+  // Lógica de avanço automático (sem alterações)
   useEffect(() => {
-    // Verifica se pode avançar do Passo 1 (Serviço e Barbeiro) para o Passo 2 (Data e Hora)
     if (currentStep === 1 && formData.service && formData.barber) {
       setCurrentStep(2);
-      window.scrollTo({ top: 0, behavior: "smooth" }); // Rola para o topo
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
     // Verifica se pode avançar do Passo 2 (Data e Hora) para o Passo 3 (Dados Pessoais)
-    else if (currentStep === 2 && formData.date && formData.time) {
+    // ADICIONADO: !rescheduleInfo para não avançar automaticamente se estiver remarcando
+    //             e a data/hora ainda não foi escolhida PELO USUÁRIO.
+    else if (
+      currentStep === 2 &&
+      formData.date &&
+      formData.time &&
+      !rescheduleInfo
+    ) {
       setCurrentStep(3);
-      window.scrollTo({ top: 0, behavior: "smooth" }); // Rola para o topo
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [formData, currentStep]);
+    // Se estiver remarcando E já selecionou data/hora, avança para o passo 3
+    else if (
+      currentStep === 2 &&
+      formData.date &&
+      formData.time &&
+      rescheduleInfo
+    ) {
+      setCurrentStep(3);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Limpa a informação de remarcação do estado para evitar re-avanço indesejado
+      // É uma abordagem, outra seria só verificar se já avançou uma vez.
+      if (
+        location.state &&
+        (location.state as RescheduleState).rescheduleData
+      ) {
+        navigate(location.pathname, { state: {}, replace: true });
+      }
+    }
+    // Dependência rescheduleInfo adicionada
+  }, [
+    formData,
+    currentStep,
+    rescheduleInfo,
+    navigate,
+    location.pathname,
+    location.state,
+  ]);
 
   const updateFormData = (data: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
   };
 
+  // Lógica de voltar (sem alterações)
   const handlePrevious = () => {
     const prevStep = currentStep - 1;
     if (prevStep >= 1) {
-      // --- LÓGICA ADICIONADA ---
       // Se estamos voltando do passo 3 para o 2, limpamos a seleção de 'hora'.
-      // Isso impede o auto-avanço imediato de volta para o passo 3.
       if (currentStep === 3) {
         updateFormData({ time: "" });
       }
-
-      // Se estamos voltando do passo 2 para o 1, limpamos a seleção de 'barbeiro'.
-      // Isso impede o auto-avanço imediato de volta para o passo 2.
-      if (currentStep === 2) {
+      // Se estamos voltando do passo 2 para o 1 E NÃO ESTAMOS REMARCANDO, limpamos o barbeiro.
+      // Se estiver remarcando, não limpamos para manter a pré-seleção.
+      if (currentStep === 2 && !rescheduleInfo) {
+        // <- Adicionada condição !rescheduleInfo
         updateFormData({ barber: "" });
       }
-      // --------------------------
 
       setCurrentStep(prevStep);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  // Encontra os nomes selecionados para exibir no resumo
+  // Nomes selecionados (sem alterações)
   const selectedServiceName = useMemo(
     () => allServices.find((s) => s._id === formData.service)?.name,
     [allServices, formData.service]
@@ -88,7 +150,7 @@ export function BookingPane({
     [allBarbers, formData.barber]
   );
 
-  // ALTERADO: Lógica de submissão do formulário
+  // Lógica de submissão (PRECISA AJUSTAR PARA REMARCAÇÃO NO FUTURO)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -100,32 +162,55 @@ export function BookingPane({
       return;
     }
 
+    // ***** AJUSTE POTENCIAL AQUI para chamar endpoint de remarcação se rescheduleInfo existir *****
+    // Por enquanto, mantém a criação de um novo agendamento.
+    // O ideal seria o backend ter uma rota PUT /bookings/:id/reschedule ou similar
+    // Ou a rota POST aceitar um parâmetro opcional `rescheduledFromBookingId`
+    // E o backend se encarregaria de cancelar o antigo e criar o novo atomicamente.
+
     const bookingPayload = {
       barber: barber,
       service: service,
       time: new Date(`${date}T${time}:00`).toISOString(),
       customer: {
         name: name,
-        phone: phone.replace(/\D/g, ""), // Salva apenas os dígitos
+        phone: phone.replace(/\D/g, ""),
       },
+      // Adiciona o ID original se estiver remarcando (backend precisa suportar isso)
+      ...(rescheduleInfo && {
+        originalBookingId: rescheduleInfo.originalBookingId,
+      }),
     };
 
     try {
-      // 1. Cria o agendamento
-      const bookingResponse = await apiClient.post(
-        `/barbershops/${barbershop._id}/bookings`,
-        bookingPayload
-      );
+      let endpoint = `/barbershops/${barbershop._id}/bookings`;
+      let method: "post" | "put" = "post"; // Assume POST por padrão
 
-      // 2. Se o agendamento foi criado com sucesso, navega para a página de sucesso
-      if (bookingResponse.status === 201) {
+      // EXEMPLO: Se existir um endpoint específico para remarcar
+      // if (rescheduleInfo) {
+      //   endpoint = `/barbershops/${barbershop._id}/bookings/${rescheduleInfo.originalBookingId}/reschedule`;
+      //   method = 'put'; // Ou POST, dependendo da API
+      //   // Ajustar payload se necessário para a rota de remarcação
+      //   bookingPayload = { newTime: bookingPayload.time };
+      // }
+
+      const bookingResponse = await apiClient[method](endpoint, bookingPayload);
+
+      if (bookingResponse.status === 201 || bookingResponse.status === 200) {
+        // 200 para PUT/update
         const newBooking = bookingResponse.data;
 
-        // 3. Navega passando TODOS os dados necessários para a próxima página
+        // Se estava remarcando, talvez mostrar uma mensagem diferente
+        const successMessage = rescheduleInfo
+          ? "Seu horário foi remarcado com sucesso!"
+          : "Agendamento confirmado!";
+
+        toast.success(successMessage); // Exibe a mensagem de sucesso antes de navegar
+
+        // Navega para sucesso (sem alterações na passagem de state por enquanto)
         navigate(`/${slug}/agendamento-sucesso`, {
           replace: true,
           state: {
-            // Detalhes para exibição na tela
             bookingDetails: {
               customerName: name,
               serviceName: selectedServiceName,
@@ -134,33 +219,39 @@ export function BookingPane({
               time: time,
               barbershopName: barbershop.name,
             },
-            // Dados para a funcionalidade de pagamento
-            newBookingId: newBooking._id, // << NOVO: ID do agendamento
-            barbershopId: barbershop._id, // << NOVO: ID da barbearia
-            paymentsEnabled: barbershop.paymentsEnabled, // << NOVO: Flag de pagamento
+            newBookingId: newBooking._id,
+            barbershopId: barbershop._id,
+            paymentsEnabled: barbershop.paymentsEnabled,
             barbershopSlug: barbershop.slug,
           },
         });
       }
     } catch (err: any) {
-      toast.error(
-        err.response?.data?.error ?? "Erro ao agendar. Tente outro horário."
-      );
+      const errorMsg =
+        err.response?.data?.error ??
+        (rescheduleInfo ? "Erro ao remarcar." : "Erro ao agendar.");
+      toast.error(`${errorMsg} Tente outro horário.`);
     } finally {
       setIsSubmitting(false);
     }
-
-    // O finally foi movido para dentro do try/catch para não ser executado durante o redirecionamento
   };
 
-  // NOVO: Define o texto do botão com base na necessidade de pagamento
+  // Texto do botão (sem alterações)
   const submitButtonText = barbershop.paymentsEnabled
     ? isSubmitting
-      ? "Gerando Pagamento..."
-      : "Pagar e Agendar"
+      ? rescheduleInfo
+        ? "Remarcando..."
+        : "Gerando Pagamento..." // Ajusta texto do loading
+      : rescheduleInfo
+      ? "Confirmar Remarcação"
+      : "Pagar e Agendar" // Ajusta texto padrão
     : isSubmitting
-    ? "Agendando..."
-    : "Confirmar Agendamento";
+    ? rescheduleInfo
+      ? "Remarcando..."
+      : "Agendando..." // Ajusta texto do loading
+    : rescheduleInfo
+    ? "Confirmar Remarcação"
+    : "Confirmar Agendamento"; // Ajusta texto padrão
 
   return (
     <div className="p-4 pb-8 md:p-6 lg:p-8 mt-1">
@@ -172,8 +263,9 @@ export function BookingPane({
               barbers={allBarbers}
               selectedService={formData.service}
               selectedBarber={formData.barber}
-              onSelectService={(serviceId) =>
-                updateFormData({ service: serviceId })
+              onSelectService={
+                (serviceId) =>
+                  updateFormData({ service: serviceId, barber: "" }) // Limpa barbeiro ao trocar serviço
               }
               onSelectBarber={(barberId) =>
                 updateFormData({ barber: barberId })
@@ -206,8 +298,11 @@ export function BookingPane({
             type="button"
             variant="outline"
             onClick={handlePrevious}
+            // Esconde o botão Voltar no Passo 1 OU se estiver no Passo 2 VINDO de remarcação
             className={`transition-all ${
-              currentStep === 1 ? "hidden" : "visible"
+              currentStep === 1 || (currentStep === 2 && !!rescheduleInfo)
+                ? "hidden"
+                : "visible"
             }`}
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
@@ -217,10 +312,14 @@ export function BookingPane({
           {currentStep === totalSteps && (
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/90"
+              disabled={
+                isSubmitting ||
+                !formData.name ||
+                !formData.phone ||
+                formData.phone.length < 11
+              } // Adiciona validação básica
+              className="bg-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/90 ml-auto" // Adicionado ml-auto para alinhar à direita se o Voltar sumir
             >
-              {/* ALTERADO: Usa o texto dinâmico do botão */}
               {submitButtonText}
               <Check className="ml-1 h-4 w-4" />
             </Button>

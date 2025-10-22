@@ -39,6 +39,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --loja-theme-color: #000000;
 }
 
 :root {
@@ -141,6 +142,7 @@
   animation: drawCheck 0.6s ease-out 0.3s forwards;
 }
 
-span[data-slot="select-value"],div[role="option"] > span:last-child {
+span[data-slot="select-value"],
+div[role="option"] > span:last-child {
   flex: 1;
 }

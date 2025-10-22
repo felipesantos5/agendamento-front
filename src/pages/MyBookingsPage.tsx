@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import apiClient from "@/services/api";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,50 +18,25 @@ import {
 import { toast } from "sonner";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Calendar,
-  Clock,
-  CreditCard,
-  Home,
-  Loader2,
-  LogOut,
-  Scissors,
-  User,
-} from "lucide-react";
+import { Calendar, Clock, CreditCard, Home, Loader2, LogOut, Repeat, Scissors, User, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Supondo uma tipagem para o agendamento populado
-interface PopulatedBooking {
-  _id: string;
-  barbershop: {
-    _id: string;
-    name: string;
-    slug: string;
-    logoUrl: string;
-    paymentsEnabled?: boolean; // Adicione este campo
-  };
-  barber: { name: string };
-  service: { name: string; price: number };
-  time: string;
-  status: "booked" | "confirmed" | "completed" | "canceled";
-  paymentStatus?: "approved" | "pending" | "rejected" | "cancelled" | null; // Adicione este campo
-}
+import RescheduleBookingModal from "@/components/RescheduleBookingModal.tsx";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PopulatedBooking } from "@/types/PopulatedBooking";
 
 export function MyBookingsPage() {
   const { customer, logout } = useCustomerAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<PopulatedBooking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreatingPayment, setIsCreatingPayment] = useState<string | null>(
-    null
-  );
+  const [isCreatingPayment, setIsCreatingPayment] = useState<string | null>(null);
+  const [bookingToReschedule, setBookingToReschedule] = useState<PopulatedBooking | null>(null);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
 
   // Função para buscar os agendamentos
   const fetchBookings = async () => {
     try {
-      const response = await apiClient.get<PopulatedBooking[]>(
-        "/api/auth/customer/me/bookings"
-      );
+      const response = await apiClient.get<PopulatedBooking[]>("/api/auth/customer/me/bookings");
       setBookings(response.data);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
@@ -92,24 +61,15 @@ export function MyBookingsPage() {
   const [historyPage, setHistoryPage] = useState(1);
   const historyPerPage = 5;
   const totalHistoryPages = Math.ceil(pastBookings.length / historyPerPage);
-  const paginatedPastBookings = pastBookings.slice(
-    (historyPage - 1) * historyPerPage,
-    historyPage * historyPerPage
-  );
+  const paginatedPastBookings = pastBookings.slice((historyPage - 1) * historyPerPage, historyPage * historyPerPage);
 
   // Função para cancelar um agendamento
   const handleCancelBooking = async (booking: PopulatedBooking) => {
     try {
-      await apiClient.put(
-        `/barbershops/${booking.barbershop._id}/bookings/${booking._id}/cancel`
-      );
+      await apiClient.put(`/barbershops/${booking.barbershop._id}/bookings/${booking._id}/cancel`);
       toast.success("Agendamento cancelado com sucesso!");
       // Atualiza a lista localmente para refletir a mudança instantaneamente
-      setBookings((prev) =>
-        prev.map((b) =>
-          b._id === booking._id ? { ...b, status: "canceled" } : b
-        )
-      );
+      setBookings((prev) => prev.map((b) => (b._id === booking._id ? { ...b, status: "canceled" } : b)));
     } catch (error) {
       toast.error("Ocorreu um erro ao cancelar o agendamento.");
     }
@@ -126,9 +86,7 @@ export function MyBookingsPage() {
 
     setIsCreatingPayment(booking._id); // Ativa o loading para este botão específico
     try {
-      const response = await apiClient.post(
-        `/barbershops/${booking.barbershop._id}/bookings/${booking._id}/create-payment`
-      );
+      const response = await apiClient.post(`/barbershops/${booking.barbershop._id}/bookings/${booking._id}/create-payment`);
       const { payment_url } = response.data;
       if (payment_url) {
         window.location.href = payment_url;
@@ -141,10 +99,7 @@ export function MyBookingsPage() {
     }
   };
 
-  const getStatusInfo = (
-    status: PopulatedBooking["status"],
-    isHistory = false
-  ) => {
+  const getStatusInfo = (status: PopulatedBooking["status"], isHistory = false) => {
     if (isHistory && (status === "booked" || status === "confirmed")) {
       return { text: "Realizado", className: "bg-blue-100 text-blue-800" };
     }
@@ -156,6 +111,21 @@ export function MyBookingsPage() {
       default:
         return { text: "Agendado", className: "bg-blue-100 text-blue-800" };
     }
+  };
+
+  const handleOpenRescheduleModal = (booking: PopulatedBooking) => {
+    setBookingToReschedule(booking);
+    setIsRescheduleModalOpen(true);
+  };
+
+  const handleRescheduleSuccess = (updatedBooking: PopulatedBooking) => {
+    setIsRescheduleModalOpen(false); // Fecha o modal
+    setBookingToReschedule(null);
+    toast.success("Horário remarcado com sucesso!");
+    // Atualiza a lista de agendamentos localmente
+    setBookings((prevBookings) => prevBookings.map((b) => (b._id === updatedBooking._id ? updatedBooking : b)));
+    // Ou, alternativamente, buscar a lista novamente:
+    // fetchBookings();
   };
 
   if (isLoading) {
@@ -172,20 +142,11 @@ export function MyBookingsPage() {
         {/* --- NOVO HEADER --- */}
         <header className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold">
-              Meus Agendamentos
-            </h1>
-            <p className="text-muted-foreground">
-              Olá, {customer?.name?.split(" ")[0]}!
-            </p>
+            <h1 className="text-3xl md:text-4xl font-bold">Meus Agendamentos</h1>
+            <p className="text-muted-foreground">Olá, {customer?.name?.split(" ")[0]}!</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="text-sm font-semibold hover:underline cursor-pointer"
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-sm font-semibold hover:underline cursor-pointer">
               ← Voltar
             </Button>
             <Button variant="ghost" size="icon" onClick={handleLogout}>
@@ -197,21 +158,17 @@ export function MyBookingsPage() {
 
         {/* --- SEÇÃO DE PRÓXIMOS AGENDAMENTOS COM NOVO CARD --- */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
-            Próximos
-          </h2>
+          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Próximos</h2>
           {upcomingBookings.length > 0 ? (
             <div className="space-y-6">
               {upcomingBookings.map((booking) => {
                 const statusInfo = getStatusInfo(booking.status);
 
-                const canBeCancelled =
-                  booking.status === "booked" || booking.status === "confirmed";
+                const canBeCancelled = booking.status === "booked" || booking.status === "confirmed";
 
-                const showPayButton =
-                  booking.barbershop.paymentsEnabled &&
-                  booking.paymentStatus !== "approved" &&
-                  booking.status !== "canceled";
+                const showPayButton = booking.barbershop.paymentsEnabled && booking.paymentStatus !== "approved" && booking.status !== "canceled";
+
+                const canBeRescheduled = booking.status === "booked" || booking.status === "confirmed";
 
                 return (
                   <Card
@@ -225,26 +182,16 @@ export function MyBookingsPage() {
                     <CardHeader className="p-4 sm:p-6">
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex items-center gap-2">
-                          <img
-                            src={booking.barbershop.logoUrl}
-                            alt="logo barbearia"
-                            className="w-24"
-                          />
-                          <CardTitle className="text-xl md:text-2xl group-hover:underline">
-                            {booking.barbershop.name}
-                          </CardTitle>
+                          <img src={booking.barbershop.logoUrl} alt="logo barbearia" className="w-24" />
+                          <CardTitle className="text-xl md:text-2xl group-hover:underline">{booking.barbershop.name}</CardTitle>
                         </div>
-                        <Badge className={`${statusInfo.className} border`}>
-                          {statusInfo.text}
-                        </Badge>
+                        <Badge className={`${statusInfo.className} border`}>{statusInfo.text}</Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
                       <div className="flex items-center gap-3">
                         <Scissors className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-semibold">
-                          {booking.service.name}
-                        </span>
+                        <span className="font-semibold">{booking.service.name}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <User className="h-5 w-5 text-muted-foreground" />
@@ -254,21 +201,12 @@ export function MyBookingsPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <Calendar className="h-5 w-5 text-muted-foreground" />
-                        <span>
-                          {format(
-                            new Date(booking.time),
-                            "EEEE, dd 'de' MMMM",
-                            { locale: ptBR }
-                          )}
-                        </span>
+                        <span>{format(new Date(booking.time), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <Clock className="h-5 w-5 text-muted-foreground" />
                         <span>
-                          às{" "}
-                          <strong>
-                            {format(new Date(booking.time), "HH:mm")}h
-                          </strong>
+                          às <strong>{format(new Date(booking.time), "HH:mm")}h</strong>
                         </span>
                       </div>
                     </CardContent>
@@ -284,37 +222,34 @@ export function MyBookingsPage() {
                           ) : (
                             <CreditCard className="mr-2 h-4 w-4" />
                           )}
-                          {isCreatingPayment === booking._id
-                            ? "Aguarde..."
-                            : "Pagar Agora"}
+                          {isCreatingPayment === booking._id ? "Aguarde..." : "Pagar Agora"}
+                        </Button>
+                      )}
+
+                      {canBeRescheduled && (
+                        <Button
+                          variant="outline"
+                          onClick={() => handleOpenRescheduleModal(booking)} // Chama a função para abrir o modal
+                          className="w-full md:w-auto"
+                          size="default"
+                        >
+                          <Repeat className="mr-2 h-4 w-4" />
+                          Remarcar
                         </Button>
                       )}
                       {canBeCancelled && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              className="w-full md:w-auto"
-                            >
+                            <Button variant="destructive" className="w-full md:w-auto">
                               Cancelar Agendamento
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Você tem certeza?
-                              </AlertDialogTitle>
+                              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Esta ação irá cancelar o seu agendamento para o
-                                serviço de{" "}
-                                <strong>{booking.service.name}</strong> no dia{" "}
-                                <strong>
-                                  {format(
-                                    new Date(booking.time),
-                                    "dd/MM/yyyy 'às' HH:mm",
-                                    { locale: ptBR }
-                                  )}
-                                </strong>
+                                Esta ação irá cancelar o seu agendamento para o serviço de <strong>{booking.service.name}</strong> no dia{" "}
+                                <strong>{format(new Date(booking.time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</strong>
                                 .
                                 <br />
                                 <br />
@@ -322,9 +257,7 @@ export function MyBookingsPage() {
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>
-                                Manter Agendamento
-                              </AlertDialogCancel>
+                              <AlertDialogCancel>Manter Agendamento</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => handleCancelBooking(booking)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
@@ -343,21 +276,15 @@ export function MyBookingsPage() {
           ) : (
             <div className="text-center py-10 px-4 border-2 border-dashed rounded-lg">
               <Home className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-semibold">
-                Nenhum agendamento futuro
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Que tal marcar um novo horário?
-              </p>
+              <h3 className="mt-2 text-sm font-semibold">Nenhum agendamento futuro</h3>
+              <p className="mt-1 text-sm text-gray-500">Que tal marcar um novo horário?</p>
             </div>
           )}
         </section>
 
         {/* --- SEÇÃO DE HISTÓRICO COM NOVO CARD --- */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
-            Histórico
-          </h2>
+          <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Histórico</h2>
           {pastBookings.length > 0 ? (
             <>
               <div className="space-y-4">
@@ -375,26 +302,16 @@ export function MyBookingsPage() {
                       <CardHeader className="p-4 sm:p-6">
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex items-center gap-2">
-                            <img
-                              src={booking.barbershop.logoUrl}
-                              alt="logo barbearia"
-                              className="w-24"
-                            />
-                            <CardTitle className="text-xl md:text-2xl group-hover:underline">
-                              {booking.barbershop.name}
-                            </CardTitle>
+                            <img src={booking.barbershop.logoUrl} alt="logo barbearia" className="w-24" />
+                            <CardTitle className="text-xl md:text-2xl group-hover:underline">{booking.barbershop.name}</CardTitle>
                           </div>
-                          <Badge className={`${statusInfo.className} border`}>
-                            {statusInfo.text}
-                          </Badge>
+                          <Badge className={`${statusInfo.className} border`}>{statusInfo.text}</Badge>
                         </div>
                       </CardHeader>
                       <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
                         <div className="flex items-center gap-3">
                           <Scissors className="h-5 w-5 text-muted-foreground" />
-                          <span className="font-semibold">
-                            {booking.service.name}
-                          </span>
+                          <span className="font-semibold">{booking.service.name}</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <User className="h-5 w-5 text-muted-foreground" />
@@ -404,21 +321,12 @@ export function MyBookingsPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           <Calendar className="h-5 w-5 text-muted-foreground" />
-                          <span>
-                            {format(
-                              new Date(booking.time),
-                              "EEEE, dd 'de' MMMM",
-                              { locale: ptBR }
-                            )}
-                          </span>
+                          <span>{format(new Date(booking.time), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <Clock className="h-5 w-5 text-muted-foreground" />
                           <span>
-                            às{" "}
-                            <strong>
-                              {format(new Date(booking.time), "HH:mm")}h
-                            </strong>
+                            às <strong>{format(new Date(booking.time), "HH:mm")}h</strong>
                           </span>
                         </div>
                       </CardContent>
@@ -429,12 +337,7 @@ export function MyBookingsPage() {
               {/* Paginação */}
               {totalHistoryPages > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-6">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
-                    disabled={historyPage === 1}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setHistoryPage((p) => Math.max(1, p - 1))} disabled={historyPage === 1}>
                     Anterior
                   </Button>
                   <span className="mx-2 text-sm">
@@ -443,9 +346,7 @@ export function MyBookingsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))
-                    }
+                    onClick={() => setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))}
                     disabled={historyPage === totalHistoryPages}
                   >
                     Próxima
@@ -454,12 +355,36 @@ export function MyBookingsPage() {
               )}
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Você ainda não possui histórico de agendamentos.
-            </p>
+            <p className="text-sm text-muted-foreground">Você ainda não possui histórico de agendamentos.</p>
           )}
         </section>
       </div>
+
+      <Dialog open={isRescheduleModalOpen} onOpenChange={setIsRescheduleModalOpen}>
+        <DialogContent className="sm:max-w-[625px] h-[80vh] overflow-scroll">
+          {" "}
+          {/* Ajuste a largura conforme necessário */}
+          <DialogHeader>
+            <DialogTitle>Remarcar Horário</DialogTitle>
+            <DialogClose asChild>
+              <button className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Fechar</span>
+              </button>
+            </DialogClose>
+          </DialogHeader>
+          {bookingToReschedule && (
+            <RescheduleBookingModal
+              booking={bookingToReschedule}
+              onClose={() => {
+                setIsRescheduleModalOpen(false);
+                setBookingToReschedule(null);
+              }}
+              onSuccess={handleRescheduleSuccess} // Passa a função de sucesso
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
