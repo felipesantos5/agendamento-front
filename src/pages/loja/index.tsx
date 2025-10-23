@@ -13,6 +13,7 @@ import { ShopInfo } from "@/components/ShopInfo";
 import { PlansPane } from "./sections/PlansPane";
 import { Plan } from "@/types/plans";
 import { CustomerProductsPage } from "./sections/Products";
+import { ProductsApiResponse } from "@/types/Products";
 
 export type Tab = {
   id: string;
@@ -30,6 +31,8 @@ export function Loja() {
   const [allBarbers, setAllBarbers] = useState<Barber[]>([]);
 
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [products, setProducts] = useState<ProductsApiResponse[]>([]);
+
   const [activeTab, setActiveTab] = useState<TabId>("agendamento");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,15 +61,17 @@ export function Loja() {
           document.documentElement.style.setProperty("--loja-theme-color", currentBarbershop.themeColor);
         }
 
-        const [servicesResponse, barbersResponse, plansResponse] = await Promise.all([
+        const [servicesResponse, barbersResponse, plansResponse, productsResponse] = await Promise.all([
           apiClient.get(`/barbershops/${currentBarbershop._id}/services`),
           apiClient.get(`/barbershops/${currentBarbershop._id}/barbers`),
           apiClient.get(`/api/barbershops/${currentBarbershop._id}/plans`),
+          apiClient.get(`/api/barbershops/${currentBarbershop._id}/products`),
         ]);
 
         setAllServices(servicesResponse.data);
         setAllBarbers(barbersResponse.data);
         setPlans(plansResponse.data);
+        setProducts(productsResponse.data?.products || []);
       } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 404) {
           window.location.replace("https://compre.barbeariagendamento.com.br");
@@ -83,15 +88,26 @@ export function Loja() {
   }, [slug]);
 
   const visibleTabs = useMemo(() => {
+    // Abas que sempre aparecem
     const tabs: Tab[] = [
       { id: "agendamento", label: "Serviços" },
-      { id: "products", label: "Produtos" },
-      { id: "planos", label: "Planos" },
       { id: "avaliacoes", label: "Avaliações" },
     ];
 
+    // Adiciona a aba 'Planos' condicionalmente
+    if (plans && plans.length > 0) {
+      tabs.push({ id: "planos", label: "Planos" });
+    }
+
+    console.log(`products.length`, products.length);
+
+    // Adiciona a aba 'Produtos' condicionalmente
+    if (products && products.length > 0) {
+      tabs.push({ id: "products", label: "Produtos" });
+    }
+
     return tabs;
-  }, [plans]);
+  }, [plans, products]);
 
   const handleBookNowClick = () => {
     setActiveTab("agendamento");

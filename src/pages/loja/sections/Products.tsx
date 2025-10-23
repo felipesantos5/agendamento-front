@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import apiClient from "./../../../services/api";
+import { AnimatePresence, motion } from "framer-motion";
 
 // Tipos
 interface Product {
@@ -30,6 +31,13 @@ interface Product {
 //   { value: "spray", label: "Spray" },
 //   { value: "outros", label: "Outros" },
 // ];
+
+const sectionAnimation = {
+  initial: { opacity: 0, x: 50 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -50 },
+  transition: { duration: 0.3, ease: "easeInOut" },
+};
 
 // Componente do Card do Produto
 function ProductCard({ product }: { product: Product }) {
@@ -133,73 +141,82 @@ export function CustomerProductsPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum produto encontrado</h3>
-            <p className="text-gray-600">Tente ajustar os filtros para encontrar o que procura</p>
-          </div>
-        )}
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="services" // Chave única para o AnimatePresence identificar o elemento
+        initial={sectionAnimation.initial}
+        animate={sectionAnimation.animate}
+        exit={sectionAnimation.exit}
+        className="space-y-4"
+      >
+        <div className="">
+          <div className="container mx-auto px-4 py-8">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : products.length > 0 ? (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {products.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum produto encontrado</h3>
+              </div>
+            )}
 
-        {/* Paginação */}
-        {pagination.pages > 1 && (
-          <div className="flex justify-center items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => handlePageChange(pagination.current - 1)} disabled={pagination.current <= 1}>
-              <ChevronLeft className="h-4 w-4" />
-              Anterior
-            </Button>
+            {/* Paginação */}
+            {pagination.pages > 1 && (
+              <div className="flex justify-center items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => handlePageChange(pagination.current - 1)} disabled={pagination.current <= 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
 
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => {
-                let page;
-                if (pagination.pages <= 5) {
-                  page = i + 1;
-                } else if (pagination.current <= 3) {
-                  page = i + 1;
-                } else if (pagination.current >= pagination.pages - 2) {
-                  page = pagination.pages - 4 + i;
-                } else {
-                  page = pagination.current - 2 + i;
-                }
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => {
+                    let page;
+                    if (pagination.pages <= 5) {
+                      page = i + 1;
+                    } else if (pagination.current <= 3) {
+                      page = i + 1;
+                    } else if (pagination.current >= pagination.pages - 2) {
+                      page = pagination.pages - 4 + i;
+                    } else {
+                      page = pagination.current - 2 + i;
+                    }
 
-                return (
-                  <Button
-                    key={page}
-                    variant={page === pagination.current ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePageChange(page)}
-                    className="w-10"
-                  >
-                    {page}
-                  </Button>
-                );
-              })}
-            </div>
+                    return (
+                      <Button
+                        key={page}
+                        variant={page === pagination.current ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(page)}
+                        className="w-10"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+                </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(pagination.current + 1)}
-              disabled={pagination.current >= pagination.pages}
-            >
-              Próxima
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.current + 1)}
+                  disabled={pagination.current >= pagination.pages}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

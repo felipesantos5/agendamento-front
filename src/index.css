@@ -146,3 +146,11 @@ span[data-slot="select-value"],
 div[role="option"] > span:last-child {
   flex: 1;
 }
+
+.dialog-rebooking .booking-table-container {
+  flex-direction: column;
+}
+
+.dialog-rebooking .booking-table-container .booking-table {
+  width: 100%;
+}

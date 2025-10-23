@@ -86,7 +86,7 @@ export function MyBookingsPage() {
 
     setIsCreatingPayment(booking._id); // Ativa o loading para este botão específico
     try {
-      const response = await apiClient.post(`/barbershops/${booking.barbershop._id}/bookings/${booking._id}/create-payment`);
+      const response = await apiClient.post(`/api/barbershops/${booking.barbershop._id}/bookings/${booking._id}/create-payment`);
       const { payment_url } = response.data;
       if (payment_url) {
         window.location.href = payment_url;
@@ -166,29 +166,36 @@ export function MyBookingsPage() {
 
                 const canBeCancelled = booking.status === "booked" || booking.status === "confirmed";
 
-                const showPayButton = booking.barbershop.paymentsEnabled && booking.paymentStatus !== "approved" && booking.status !== "canceled";
+                const showPayButton =
+                  booking.barbershop.paymentsEnabled === true && booking.paymentStatus !== "approved" && booking.status !== "canceled";
+
+                const showPaiedBadge =
+                  booking.barbershop.paymentsEnabled === true && booking.paymentStatus === "approved" && booking.status !== "canceled";
 
                 const canBeRescheduled = booking.status === "booked" || booking.status === "confirmed";
 
                 return (
                   <Card
                     key={booking._id}
-                    className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0 group-hover:ring-2 group-hover:ring-blue-200 cursor-pointer"
+                    className="bg-white dark:bg-gray-800 shadow-md transition-all hover:shadow-lg gap-0 group-hover:ring-2 pb-0 group-hover:ring-blue-200 cursor-pointer"
                     onClick={(e) => {
                       if ((e.target as HTMLElement).closest("button")) return;
                       navigate(`/${booking.barbershop.slug}`);
                     }}
                   >
                     <CardHeader className="p-4 sm:p-6">
-                      <div className="flex justify-between items-start gap-4">
+                      <div className="flex flex-col justify-between items-start gap-4">
                         <div className="flex items-center gap-2">
                           <img src={booking.barbershop.logoUrl} alt="logo barbearia" className="w-24" />
                           <CardTitle className="text-xl md:text-2xl group-hover:underline">{booking.barbershop.name}</CardTitle>
                         </div>
-                        <Badge className={`${statusInfo.className} border`}>{statusInfo.text}</Badge>
+                        <div className="flex gap-2">
+                          <Badge className={`${statusInfo.className} border`}>{statusInfo.text}</Badge>
+                          {showPaiedBadge && <Badge className="bg-green-500 border">Pago no App</Badge>}
+                        </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
+                    <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base pt-0">
                       <div className="flex items-center gap-3">
                         <Scissors className="h-5 w-5 text-muted-foreground" />
                         <span className="font-semibold">{booking.service.name}</span>
@@ -210,7 +217,7 @@ export function MyBookingsPage() {
                         </span>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-4 gap-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t flex-col md:flex-row">
+                    <CardFooter className="p-4 rounded-b-lg gap-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 border-t flex-col md:flex-row">
                       {showPayButton && (
                         <Button
                           onClick={() => handlePayNow(booking)}
@@ -361,7 +368,7 @@ export function MyBookingsPage() {
       </div>
 
       <Dialog open={isRescheduleModalOpen} onOpenChange={setIsRescheduleModalOpen}>
-        <DialogContent className="sm:max-w-[625px] h-[80vh] overflow-scroll">
+        <DialogContent className="sm:max-w-[625px] h-[80vh] overflow-scroll dialog-rebooking">
           {" "}
           {/* Ajuste a largura conforme necessário */}
           <DialogHeader>

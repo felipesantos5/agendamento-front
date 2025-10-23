@@ -26,7 +26,7 @@ export function ShopHeader({ barbershop, onBookNowClick }: ShopHeaderProps) {
       </Avatar>
       <h1 className="text-3xl font-bold mb-4">{barbershop.name}</h1>
       <Button onClick={onBookNowClick} size="lg" className="w-full max-w-xs bg-[var(--loja-theme-color)] hover:bg-[var(--loja-theme-color)]/90">
-        Agendar agora
+        Agendar Agora
       </Button>
     </header>
   );

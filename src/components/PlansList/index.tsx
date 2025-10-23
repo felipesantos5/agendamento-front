@@ -3,7 +3,6 @@ import apiClient from "@/services/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
 import { PriceFormater } from "@/helper/priceFormater";
 
 interface Plan {
@@ -19,37 +18,26 @@ interface PlansListProps {
 
 export function PlansList({ barbershopId }: PlansListProps) {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!barbershopId) return;
 
     const fetchPlans = async () => {
       try {
-        setIsLoading(true);
         const response = await apiClient.get(`/api/barbershops/${barbershopId}/plans`);
         setPlans(response.data);
       } catch (error) {
         console.error("Erro ao carregar planos:", error);
         toast.error("Não foi possível carregar os planos.");
       } finally {
-        setIsLoading(false);
       }
     };
 
     fetchPlans();
   }, [barbershopId]);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-8">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
-  }
-
   if (plans.length === 0) {
-    return <p className="text-center text-muted-foreground p-8">Nenhum plano disponível no momento.</p>;
+    return <p className="text-center text-muted-foreground pb-8">Nenhum plano disponível no momento.</p>;
   }
 
   return (
