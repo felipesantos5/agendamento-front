@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Calendar, Clock, ChevronLeft, ChevronRight } from "lucide-react";
-import axios from "axios"; // Mantido, mas apiClient seria mais consistente
-import { API_BASE_URL } from "@/config/BackendUrl"; //
 import { useHolidays } from "@/hooks/useHolidays"; //
 import { Spinner } from "../ui/spinnerLoading"; //
 import { AnimatePresence, motion } from "framer-motion";
