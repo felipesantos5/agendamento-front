@@ -407,7 +407,7 @@ export default function DateTimeSelection({
               </div>
             )}
 
-            <div className={`flex items-center justify-center w-full min-h-[180px]`}>
+            <div className={`flex items-baseline justify-center w-full min-h-[180px]`}>
               {loadingTimes ? (
                 <Spinner />
               ) : (
