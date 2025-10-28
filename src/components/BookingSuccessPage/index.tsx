@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { CalendarDays, Clock, User, Scissors, ShieldAlert /* Ícone para fallback */, CreditCard, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button"; //
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"; //
+import { CalendarDays, Clock, User, Scissors, ShieldAlert, CreditCard } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import apiClient from "@/services/api";
