@@ -130,7 +130,7 @@ export default function ServiceSelection({
                     }`}
                   >
                     <Avatar>
-                      <AvatarImage src={barber.image} />
+                      <AvatarImage src={barber.image} className="object-cover" />
                       <AvatarFallback>{barber.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <span className="font-semibold">{barber.name}</span>
