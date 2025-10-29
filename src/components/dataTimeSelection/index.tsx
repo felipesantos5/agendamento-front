@@ -20,8 +20,6 @@ interface TimeSlot {
 }
 
 interface ApiResponse {
-  isHoliday: boolean;
-  holidayName?: string;
   slots: TimeSlot[];
 }
 
@@ -56,7 +54,6 @@ export default function DateTimeSelection({
   const [loadingMonthly, setLoadingMonthly] = useState(true);
   const [isSearchingDate, setIsSearchingDate] = useState(false); // Flag para busca de data
 
-  const { isHoliday, getHolidayName } = useHolidays(); //
   const timeSlotsRef = useRef<HTMLDivElement>(null);
 
   // Busca horários (usando apiClient agora para consistência)
@@ -73,12 +70,7 @@ export default function DateTimeSelection({
             params: { date: formData.date, serviceId: selectedServiceId },
           });
           const data: ApiResponse = response.data;
-          if (data.isHoliday) {
-            setHolidayMessage(`Esta data é feriado: ${data.holidayName}`);
-            setTimeSlots([]);
-          } else {
-            setTimeSlots(Array.isArray(data.slots) ? data.slots : response.data || []);
-          }
+          setTimeSlots(Array.isArray(data.slots) ? data.slots : response.data || []);
         } catch (error) {
           console.error("Erro ao buscar horários:", error);
           toast.error("Erro ao carregar os horários disponíveis.");
@@ -129,7 +121,6 @@ export default function DateTimeSelection({
   useEffect(() => {
     // Só executa se a busca mensal terminou, ainda não há data selecionada, temos barbeiro E a flag de busca está ativa
     if (!loadingMonthly && !formData.date && selectedBarber && isSearchingDate) {
-      console.log("Procurando primeiro dia disponível...");
       let searchDate = new Date();
       searchDate.setHours(0, 0, 0, 0);
 
@@ -152,12 +143,8 @@ export default function DateTimeSelection({
         if (searchDate.getFullYear() === currentMonth.getFullYear() && searchDate.getMonth() === currentMonth.getMonth()) {
           const isPast = searchDate < new Date(new Date().setHours(0, 0, 0, 0));
           const isUnavailable = unavailableDays.has(dateString); // Usa o nome do estado do seu código
-          const holiday = isHoliday(dateString);
 
-          console.log(`Verificando ${dateString}: Passado=${isPast}, Indisponível=${isUnavailable}, Feriado=${holiday}`);
-
-          if (!isPast && !isUnavailable && !holiday) {
-            console.log(`Data encontrada: ${dateString}`);
+          if (!isPast && !isUnavailable) {
             updateFormData({ date: dateString });
             foundAvailableDate = true;
             break; // Sai do loop
@@ -167,7 +154,6 @@ export default function DateTimeSelection({
           (searchDate.getFullYear() === currentMonth.getFullYear() && searchDate.getMonth() > currentMonth.getMonth())
         ) {
           // Se ultrapassou o mês carregado, avança calendário e sai do loop atual
-          console.log(`Busca ultrapassou o mês ${currentMonth.getMonth() + 1}. Avançando calendário...`);
           setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
           // A busca será retomada quando o useEffect de fetchMonthlyAvailability recarregar
           foundAvailableDate = true; // Sinaliza para não continuar buscando neste ciclo
@@ -184,7 +170,7 @@ export default function DateTimeSelection({
       }
       setIsSearchingDate(false); // Finaliza o estado de busca para este ciclo
     }
-  }, [loadingMonthly, unavailableDays, selectedBarber, currentMonth, formData.date, isSearchingDate, updateFormData, isHoliday]); // Dependências atualizadas
+  }, [loadingMonthly, unavailableDays, selectedBarber, currentMonth, formData.date, isSearchingDate, updateFormData]); // Dependências atualizadas
 
   // Função auxiliar para verificar indisponibilidade (usando o estado do seu código)
   const isDayUnavailable = (day: number) => {
@@ -274,12 +260,7 @@ export default function DateTimeSelection({
     const selectedDate = new Date(year, month, day);
     return selectedDate < today;
   };
-  const isDayHoliday = (day: number) => {
-    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return isHoliday(dateString);
-  };
 
-  // --- Renderização JSX com layout condicional ---
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -348,12 +329,10 @@ export default function DateTimeSelection({
                 </div>
                 <div className="grid grid-cols-7 gap-px bg-gray-200">
                   {days.map((day, index) => {
-                    const isDisabled = day === null || isDateInPast(day) || isDayHoliday(day) || isDayUnavailable(day); // Usa isDayUnavailable
+                    const isDisabled = day === null || isDateInPast(day) || isDayUnavailable(day);
                     const isSelected = formData.date === `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                     let title = undefined;
                     if (isDateInPast(day)) title = "Data indisponível";
-                    else if (isDayHoliday(day))
-                      title = `Feriado: ${getHolidayName(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`)}`;
                     else if (isDayUnavailable(day)) title = "Nenhum horário disponível"; // Usa isDayUnavailable
 
                     return (
@@ -365,19 +344,13 @@ export default function DateTimeSelection({
                             onClick={() => handleDateSelect(day)}
                             className={cn(
                               `mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm relative transition-colors`,
-                              isDisabled &&
-                                !isDayHoliday(day) &&
-                                "text-gray-400 cursor-not-allowed line-through" + (isDateInPast(day) ? " decoration-2" : ""),
-                              isDayHoliday(day) && "bg-red-100 text-red-500 font-semibold cursor-not-allowed",
+                              isDisabled && "text-gray-400 cursor-not-allowed line-through" + (isDateInPast(day) ? " decoration-2" : ""),
                               isSelected && !isDisabled && "bg-[var(--loja-theme-color)] text-white",
                               !isSelected && !isDisabled && "hover:bg-[var(--loja-theme-color)]/30 cursor-pointer"
                             )}
                             title={title}
                           >
                             {day}
-                            {isDayHoliday(day) && !isDateInPast(day) && (
-                              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                            )}
                           </button>
                         )}
                       </div>

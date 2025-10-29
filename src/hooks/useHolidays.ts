@@ -7,9 +7,7 @@ interface Holiday {
 }
 
 export const useHolidays = () => {
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-
-  console.log(setHolidays);
+  const [holidays] = useState<Holiday[]>([]);
 
   const isHoliday = (date: string): boolean => {
     return holidays.some((holiday) => {

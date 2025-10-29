@@ -99,8 +99,6 @@ export function Loja() {
       tabs.push({ id: "planos", label: "Planos" });
     }
 
-    console.log(`products.length`, products.length);
-
     // Adiciona a aba 'Produtos' condicionalmente
     if (products && products.length > 0) {
       tabs.push({ id: "products", label: "Produtos" });
