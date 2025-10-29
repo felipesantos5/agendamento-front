@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Calendar, Clock, ChevronLeft, ChevronRight } from "lucide-react";
-import { useHolidays } from "@/hooks/useHolidays"; //
 import { Spinner } from "../ui/spinnerLoading"; //
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
