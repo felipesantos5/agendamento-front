@@ -31,19 +31,11 @@ export interface Barbershop {
   paymentsEnabled?: boolean;
 }
 
-export interface Service {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: number; // em minutos
-}
-
 export interface Barber {
   _id: string;
   name: string;
   image: string;
-  availability: Availability[]; // Supondo que Availability é parecido com WorkingHour
+  availability: Availability[];
 }
 
 // Interface para a disponibilidade do barbeiro (se for diferente de WorkingHour)
@@ -51,16 +43,4 @@ export interface Availability {
   day: string;
   start: string;
   end: string;
-}
-
-// Você pode também definir os tipos para o formulário aqui
-export interface BookingFormData {
-  service: string;
-  barber: string;
-  date: string;
-  time: string;
-  name: string;
-  email: string;
-  phone: string;
-  paymentStatus?: string;
 }

@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PriceFormater } from "@/helper/priceFormater";
-import { Service, Barber } from "@/types/barberShop";
-import { CheckCircle2, ArrowLeft } from "lucide-react";
+import { Barber } from "@/types/barberShop";
+import { CheckCircle2, ArrowLeft, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Service } from "@/types/Service";
 
 // Interface de props que o componente espera receber do componente pai
 interface ServiceSelectionProps {
@@ -52,16 +53,13 @@ export default function ServiceSelection({
 
   return (
     <div className="space-y-4">
-      {/* O AnimatePresence gerencia as animações de entrada e saída dos componentes filhos */}
       <AnimatePresence mode="wait">
-        {/* --- VISUALIZAÇÃO DE SERVIÇOS --- */}
         {view === "services" && (
           <motion.div
-            key="services" // Chave única para o AnimatePresence identificar o elemento
+            key="services"
             initial={sectionAnimation.initial}
             animate={sectionAnimation.animate}
             exit={sectionAnimation.exit}
-            // transition={sectionAnimation.transition}
             className="space-y-4"
           >
             <div className="text-center md:text-left">
@@ -88,9 +86,16 @@ export default function ServiceSelection({
                       <p className={`text-xs ${isSelected ? "text-white/80" : "text-muted-foreground"}`}>{service.duration} min</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`font-bold text-lg ${isSelected ? "text-white" : "text-[var(--loja-theme-color)]"}`}>
-                        {PriceFormater(service.price)}
-                      </span>
+                      {service.isPlanService ? (
+                        <span className={`flex items-center gap-1 font-bold text-sm ${isSelected ? "text-white" : "text-[var(--loja-theme-color)]"}`}>
+                          <Star size={16} className="fill-current" />
+                          Incluso no Plano
+                        </span>
+                      ) : (
+                        <span className={`font-bold text-lg ${isSelected ? "text-white" : "text-[var(--loja-theme-color)]"}`}>
+                          {PriceFormater(service.price)}
+                        </span>
+                      )}
                       {isSelected && <CheckCircle2 className="h-5 w-5 text-white" />}
                     </div>
                   </Button>
@@ -107,7 +112,6 @@ export default function ServiceSelection({
             initial={sectionAnimation.initial}
             animate={sectionAnimation.animate}
             exit={sectionAnimation.exit}
-            // transition={sectionAnimation.transition}
             className="space-y-4"
           >
             <div className="text-center md:text-left">

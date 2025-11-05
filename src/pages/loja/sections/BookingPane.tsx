@@ -1,3 +1,4 @@
+// src/pages/loja/sections/BookingPane.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom"; // Importar useLocation
 import apiClient from "@/services/api";
@@ -7,9 +8,10 @@ import { ChevronLeft, Check } from "lucide-react";
 import ServiceSelection from "@/components/serviceSelection";
 import DateTimeSelection from "@/components/dataTimeSelection";
 import PersonalInfo from "@/components/personalInfo";
-import { Service, Barber, Barbershop } from "@/types/barberShop";
+import { Barber, Barbershop } from "@/types/barberShop";
+import { Service } from "@/types/Service";
 
-// Definindo as props que o componente receberá da página principal
+// ... (interfaces e estado inicial permanecem os mesmos) ...
 interface BookingPaneProps {
   barbershop: Barbershop;
   allServices: Service[];
@@ -36,6 +38,7 @@ interface RescheduleState {
 // ****************************************************
 
 export function BookingPane({ barbershop, allServices, allBarbers }: BookingPaneProps) {
+  // ... (hooks e estados permanecem os mesmos) ...
   const navigate = useNavigate();
   const location = useLocation(); // Hook para acessar o state da navegação
   const { slug } = useParams<{ slug: string }>();
@@ -66,7 +69,7 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;
 
-  // Lógica de avanço automático (sem alterações)
+  // ... (useEffect de avanço automático e updateFormData permanecem os mesmos) ...
   useEffect(() => {
     if (currentStep === 1 && formData.service && formData.barber) {
       setCurrentStep(2);
@@ -96,7 +99,6 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
     setFormData((prev) => ({ ...prev, ...data }));
   };
 
-  // Lógica de voltar (sem alterações)
   const handlePrevious = () => {
     const prevStep = currentStep - 1;
     if (prevStep >= 1) {
@@ -116,11 +118,10 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
     }
   };
 
-  // Nomes selecionados (sem alterações)
   const selectedServiceName = useMemo(() => allServices.find((s) => s._id === formData.service)?.name, [allServices, formData.service]);
   const selectedBarberName = useMemo(() => allBarbers.find((b) => b._id === formData.barber)?.name, [allBarbers, formData.barber]);
 
-  // Lógica de submissão (PRECISA AJUSTAR PARA REMARCAÇÃO NO FUTURO)
+  // Lógica de submissão (handleSubmit)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -160,26 +161,33 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
       let endpoint = `/barbershops/${barbershop._id}/bookings`;
       let method: "post" | "put" = "post"; // Assume POST por padrão
 
-      // EXEMPLO: Se existir um endpoint específico para remarcar
-      // if (rescheduleInfo) {
-      //   endpoint = `/barbershops/${barbershop._id}/bookings/${rescheduleInfo.originalBookingId}/reschedule`;
-      //   method = 'put'; // Ou POST, dependendo da API
-      //   // Ajustar payload se necessário para a rota de remarcação
-      //   bookingPayload = { newTime: bookingPayload.time };
-      // }
+      // ... (lógica de remarcação, se houver, permanece) ...
+      // if (rescheduleInfo) { ... }
 
       const bookingResponse = await apiClient[method](endpoint, bookingPayload);
 
+      // Se o backend retornou 201 (criado com sucesso, seja por plano ou não)
       if (bookingResponse.status === 201 || bookingResponse.status === 200) {
         // 200 para PUT/update
         const newBooking = bookingResponse.data;
 
-        // Se estava remarcando, talvez mostrar uma mensagem diferente
-        const successMessage = rescheduleInfo ? "Seu horário foi remarcado com sucesso!" : "Agendamento confirmado!";
+        // Verifica se o pagamento foi por crédito de plano (o backend deve retornar isso)
+        // Se o paymentStatus for 'plan_credit', o agendamento já está confirmado.
+        const isPlanCredit = newBooking.paymentStatus === "plan_credit";
+
+        const successMessage = rescheduleInfo
+          ? "Seu horário foi remarcado com sucesso!"
+          : isPlanCredit
+          ? "Agendamento confirmado (crédito do plano)!"
+          : "Agendamento confirmado!";
 
         toast.success(successMessage); // Exibe a mensagem de sucesso antes de navegar
 
-        // Navega para sucesso (sem alterações na passagem de state por enquanto)
+        // Se for crédito de plano, NÃO precisa ir para a página de pagamento.
+        // Se os pagamentos estiverem habilitados E NÃO for crédito de plano, vai para o pagamento.
+        const shouldGoToPayment = barbershop.paymentsEnabled && !isPlanCredit;
+
+        // Navega para sucesso
         navigate(`/${slug}/agendamento-sucesso`, {
           replace: true,
           state: {
@@ -197,20 +205,44 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
             },
             newBookingId: newBooking._id,
             barbershopId: barbershop._id,
-            paymentsEnabled: barbershop.paymentsEnabled,
+            // ATUALIZADO: Só habilita pagamento se a loja permite E não foi usado crédito de plano
+            paymentsEnabled: shouldGoToPayment,
             barbershopSlug: barbershop.slug,
           },
         });
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error ?? (rescheduleInfo ? "Erro ao remarcar." : "Erro ao agendar.");
-      toast.error(`${errorMsg} Tente outro horário.`);
+      //
+      // MODIFICAÇÃO: Tratamento de Erro (Incluindo 403)
+      //
+      console.error("Erro no agendamento:", err);
+      let errorMsg = rescheduleInfo ? "Erro ao remarcar." : "Erro ao agendar.";
+
+      if (err.response) {
+        // Erro 403 (Forbidden) específico para créditos de plano
+        if (err.response.status === 403) {
+          errorMsg = err.response.data?.error || "Este serviço é exclusivo para assinantes e você não possui créditos válidos.";
+          // Mostra o erro 403 de forma clara
+          toast.error("Agendamento não permitido", {
+            description: errorMsg,
+            duration: 5000,
+          });
+        } else {
+          // Outros erros da API (ex: 409 Conflito de horário)
+          errorMsg = err.response.data?.error || errorMsg;
+          toast.error(`${errorMsg} Tente outro horário.`);
+        }
+      } else {
+        // Erros de rede ou outros
+        toast.error(`${errorMsg} Tente outro horário.`);
+      }
+      // FIM DA MODIFICAÇÃO
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Texto do botão (sem alterações)
+  // ... (submitButtonText e o JSX de retorno permanecem os mesmos) ...
   const submitButtonText = barbershop.paymentsEnabled
     ? isSubmitting
       ? rescheduleInfo

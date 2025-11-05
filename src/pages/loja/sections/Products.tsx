@@ -156,7 +156,7 @@ export function CustomerProductsPage() {
                 <Loader2 className="h-8 w-8 animate-spin" />
               </div>
             ) : products.length > 0 ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                 {products.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}

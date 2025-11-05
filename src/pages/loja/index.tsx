@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import apiClient from "@/services/api";
 import { toast } from "sonner";
 import axios from "axios";
-import { Barbershop, Service, Barber } from "@/types/barberShop";
+import { Barbershop, Barber } from "@/types/barberShop";
 import { Loader2 } from "lucide-react";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { BookingPane } from "./sections/BookingPane";
@@ -14,6 +14,7 @@ import { PlansPane } from "./sections/PlansPane";
 import { Plan } from "@/types/plans";
 import { CustomerProductsPage } from "./sections/Products";
 import { ProductsApiResponse } from "@/types/Products";
+import { Service } from "@/types/Service";
 
 export type Tab = {
   id: string;
