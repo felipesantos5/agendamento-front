@@ -196,16 +196,32 @@ export function MyBookingsPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base pt-0">
-                      <div className="flex items-center gap-3">
-                        <Scissors className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-semibold">{booking.service.name}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <User className="h-5 w-5 text-muted-foreground" />
-                        <span>
-                          com <strong>{booking.barber.name}</strong>
-                        </span>
-                      </div>
+                      {booking.service ? (
+                        <div className="flex items-center gap-3">
+                          <Scissors className="h-5 w-5 text-muted-foreground" />
+                          <span className="font-semibold">{booking.service?.name || "Serviço indisponível"}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Scissors className="h-5 w-5 text-muted-foreground" />
+                          <span className="font-semibold italic text-muted-foreground">Serviço indisponível</span>
+                        </div>
+                      )}
+
+                      {/* --- CORREÇÃO PREVENTIVA AQUI --- */}
+                      {booking.barber ? (
+                        <div className="flex items-center gap-3">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                          <span>
+                            com <strong>{booking.barber?.name || "Profissional indisponível"}</strong>
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                          <span className="italic text-muted-foreground">Profissional indisponível</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-3">
                         <Calendar className="h-5 w-5 text-muted-foreground" />
                         <span>{format(new Date(booking.time), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
@@ -255,7 +271,8 @@ export function MyBookingsPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Esta ação irá cancelar o seu agendamento para o serviço de <strong>{booking.service.name}</strong> no dia{" "}
+                                Esta ação irá cancelar o seu agendamento para o serviço de{" "}
+                                <strong>{booking.service?.name || "serviço indisponível"}</strong> no dia no dia{" "}
                                 <strong>{format(new Date(booking.time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</strong>
                                 .
                                 <br />
@@ -316,16 +333,32 @@ export function MyBookingsPage() {
                         </div>
                       </CardHeader>
                       <CardContent className="p-4 sm:p-6 space-y-4 text-sm sm:text-base">
-                        <div className="flex items-center gap-3">
-                          <Scissors className="h-5 w-5 text-muted-foreground" />
-                          <span className="font-semibold">{booking.service.name}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <User className="h-5 w-5 text-muted-foreground" />
-                          <span>
-                            com <strong>{booking.barber.name}</strong>
-                          </span>
-                        </div>
+                        {booking.service ? (
+                          <div className="flex items-center gap-3">
+                            <Scissors className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-semibold">{booking.service?.name || "Serviço indisponível"}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <Scissors className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-semibold italic text-muted-foreground">Serviço indisponível</span>
+                          </div>
+                        )}
+
+                        {/* --- CORREÇÃO PREVENTIVA AQUI --- */}
+                        {booking.barber ? (
+                          <div className="flex items-center gap-3">
+                            <User className="h-5 w-5 text-muted-foreground" />
+                            <span>
+                              com <strong>{booking.barber?.name || "Profissional indisponível"}</strong>
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <User className="h-5 w-5 text-muted-foreground" />
+                            <span className="italic text-muted-foreground">Profissional indisponível</span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-3">
                           <Calendar className="h-5 w-5 text-muted-foreground" />
                           <span>{format(new Date(booking.time), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
@@ -370,7 +403,6 @@ export function MyBookingsPage() {
       <Dialog open={isRescheduleModalOpen} onOpenChange={setIsRescheduleModalOpen}>
         <DialogContent className="sm:max-w-[625px] h-[80vh] overflow-scroll dialog-rebooking">
           {" "}
-          {/* Ajuste a largura conforme necessário */}
           <DialogHeader>
             <DialogTitle>Remarcar Horário</DialogTitle>
             <DialogClose asChild>
@@ -387,7 +419,7 @@ export function MyBookingsPage() {
                 setIsRescheduleModalOpen(false);
                 setBookingToReschedule(null);
               }}
-              onSuccess={handleRescheduleSuccess} // Passa a função de sucesso
+              onSuccess={handleRescheduleSuccess}
             />
           )}
         </DialogContent>
