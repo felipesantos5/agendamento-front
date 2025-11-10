@@ -161,18 +161,29 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
       let endpoint = `/barbershops/${barbershop._id}/bookings`;
       let method: "post" | "put" = "post"; // Assume POST por padrão
 
-      // ... (lógica de remarcação, se houver, permanece) ...
-      // if (rescheduleInfo) { ... }
-
       const bookingResponse = await apiClient[method](endpoint, bookingPayload);
 
       // Se o backend retornou 201 (criado com sucesso, seja por plano ou não)
       if (bookingResponse.status === 201 || bookingResponse.status === 200) {
-        // 200 para PUT/update
-        const newBooking = bookingResponse.data;
+        // --- INÍCIO DA NOVA LÓGICA ---
 
-        // Verifica se o pagamento foi por crédito de plano (o backend deve retornar isso)
-        // Se o paymentStatus for 'plan_credit', o agendamento já está confirmado.
+        const responseData = bookingResponse.data;
+
+        // 1. VERIFICA SE O BACKEND JÁ MANDOU A URL DE PAGAMENTO
+        // (Como você informou: { payment_url: "..." })
+        if (responseData && responseData.payment_url) {
+          toast.success("Agendamento criado! Redirecionando para o pagamento...");
+
+          // 2. REDIRECIONA IMEDIATAMENTE PARA O PAGAMENTO
+          window.location.href = responseData.payment_url;
+
+          // Para a execução aqui para não cair no 'navigate' abaixo
+          return;
+        }
+
+        // 3. SE NÃO VEIO 'payment_url', segue o fluxo normal.
+        // O backend deve ter retornado o objeto do agendamento
+        const newBooking = responseData;
         const isPlanCredit = newBooking.paymentStatus === "plan_credit";
 
         const successMessage = rescheduleInfo
@@ -181,13 +192,13 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
           ? "Agendamento confirmado (crédito do plano)!"
           : "Agendamento confirmado!";
 
-        toast.success(successMessage); // Exibe a mensagem de sucesso antes de navegar
+        toast.success(successMessage);
 
-        // Se for crédito de plano, NÃO precisa ir para a página de pagamento.
-        // Se os pagamentos estiverem habilitados E NÃO for crédito de plano, vai para o pagamento.
+        // Define se o botão "Pagar" deve aparecer na pág. de sucesso
+        // (Isso agora só se aplica se o pagamento for opcional, mas habilitado)
         const shouldGoToPayment = barbershop.paymentsEnabled && !isPlanCredit;
 
-        // Navega para sucesso
+        // 4. NAVEGA PARA A PÁGINA DE SUCESSO
         navigate(`/${slug}/agendamento-sucesso`, {
           replace: true,
           state: {
@@ -195,18 +206,15 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
               customerName: name,
               serviceName: selectedServiceName,
               barberName: selectedBarberName,
-              date: date, // YYYY-MM-DD
-              time: time, // HH:MM
+              date: date,
+              time: time,
               barbershopName: barbershop.name,
-              // --- NOVOS DADOS ---
-              serviceDuration: serviceDuration, // Passa a duração
-              barbershopAddress: formattedAddress, // Passa o endereço formatado
-              // -------------------
+              serviceDuration: serviceDuration,
+              barbershopAddress: formattedAddress,
             },
             newBookingId: newBooking._id,
             barbershopId: barbershop._id,
-            // ATUALIZADO: Só habilita pagamento se a loja permite E não foi usado crédito de plano
-            paymentsEnabled: shouldGoToPayment,
+            paymentsEnabled: shouldGoToPayment, // Passa a flag correta
             barbershopSlug: barbershop.slug,
           },
         });
