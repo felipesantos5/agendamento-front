@@ -172,8 +172,6 @@ export function BookingPane({ barbershop, allServices, allBarbers }: BookingPane
         // 1. VERIFICA SE O BACKEND JÁ MANDOU A URL DE PAGAMENTO
         // (Como você informou: { payment_url: "..." })
         if (responseData && responseData.payment_url) {
-          toast.success("Agendamento criado! Redirecionando para o pagamento...");
-
           // 2. REDIRECIONA IMEDIATAMENTE PARA O PAGAMENTO
           window.location.href = responseData.payment_url;
 

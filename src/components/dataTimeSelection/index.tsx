@@ -107,7 +107,6 @@ export default function DateTimeSelection({
         setUnavailableDays(new Set(days)); // Usa o nome do estado do seu código
       } catch (error) {
         console.error("Erro ao buscar disponibilidade do mês", error);
-        toast.error("Não foi possível verificar a disponibilidade do mês.");
         setUnavailableDays(new Set());
       } finally {
         setLoadingMonthly(false);
