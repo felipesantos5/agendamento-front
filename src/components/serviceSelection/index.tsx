@@ -82,7 +82,7 @@ export default function ServiceSelection({
                     }`}
                   >
                     <div>
-                      <p className="font-semibold">{service.name}</p>
+                      <p className="font-semibold max-w-[260px] whitespace-break-spaces">{service.name}</p>
                       <p className={`text-xs ${isSelected ? "text-white/80" : "text-muted-foreground"}`}>{service.duration} min</p>
                     </div>
                     <div className="flex items-center gap-2">
