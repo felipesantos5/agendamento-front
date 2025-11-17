@@ -39,6 +39,8 @@ export default function ServiceSelection({
     onSelectService(serviceId);
     // Ao selecionar um serviço, muda para a visualização de barbeiros
     setView("barbers");
+    // CORREÇÃO: Rola a tela para o topo suavemente
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleBarberClick = (barberId: string) => {
