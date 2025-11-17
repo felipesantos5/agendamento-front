@@ -119,7 +119,10 @@ export function CustomerProductsPage() {
       if (filters.category !== "all") params.append("category", filters.category);
       if (filters.search) params.append("search", filters.search);
 
-      const response = await apiClient.get(`/api/barbershops/${slug}/products/store`);
+      // ✅ CORREÇÃO AQUI: Adicione o objeto { params } na requisição
+      const response = await apiClient.get(`/api/barbershops/${slug}/products/store`, {
+        params: params,
+      });
 
       setProducts(response.data.products);
       setPagination(response.data.pagination);
@@ -133,7 +136,7 @@ export function CustomerProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [slug, filters]);
+  }, [slug, filters]); // A dependência [filters] já está correta
 
   const handlePageChange = (page: number) => {
     setFilters((prev) => ({ ...prev, page }));
